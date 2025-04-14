@@ -14,3 +14,4 @@ This is a simple reconnaissance tool for performing basic information gathering 
 
 1. Clone the repository
 2. Create and activate a virtual environment
+3. Install the python modules in requirements.txt
