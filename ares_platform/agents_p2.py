@@ -12,7 +12,12 @@ def red_teaming_agent(state: AgentState):
     for plan in attack_plans:
         if plan.get("approved"):
             print(f"    -> EXECUTING APPROVED PLAN: {plan['vulnerability_id']}")
-            output = execute_exploit.invoke({"target_ip": plan['target'], "payload": plan['proposed_payload']})
+            # Changed to generate PoC script instead of direct execution
+            output = execute_exploit.invoke({
+                "target_ip": plan['target'],
+                "vulnerability_id": plan['vulnerability_id'],
+                "payload_details": plan['proposed_payload']
+            })
             results.append(f"Execution of {plan['vulnerability_id']}: {output}")
         else:
             print(f"    -> SKIPPED (Not Approved): {plan['vulnerability_id']}")

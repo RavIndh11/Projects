@@ -96,6 +96,30 @@ if "started" in st.session_state:
     # If the graph has finished (no 'next' node)
     elif not current_state.next and "report" in state_values:
         st.success("✅ Assessment Complete")
+
+        # Display PoC Downloads if any exploits were approved and generated
+        execution_results = state_values.get("execution_results", [])
+        poc_files_generated = [r for r in execution_results if "saved to data/poc_" in r]
+
+        if poc_files_generated:
+            st.markdown("### Generated Proof-of-Concept Exploits")
+            st.info("The following exploit templates have been generated for your review. Please execute them responsibly.")
+            for r in poc_files_generated:
+                # Extract filename
+                try:
+                    filename = r.split("saved to ")[1].split(". Please")[0]
+                    with open(filename, "r") as f:
+                        poc_code = f.read()
+
+                    st.download_button(
+                        label=f"Download {filename.split('/')[-1]}",
+                        data=poc_code,
+                        file_name=filename.split('/')[-1],
+                        mime="text/x-python"
+                    )
+                except Exception as e:
+                    st.error(f"Could not load {r}: {e}")
+
         st.markdown("### Final Report")
         st.markdown(state_values["report"])
 

@@ -4,8 +4,11 @@ from datetime import datetime
 import chromadb
 import os
 
-# Create SQLite Database (Relational)
-DATABASE_URL = "sqlite:///./ares_state.db"
+# Ensure data directory exists for Docker volumes
+os.makedirs("data", exist_ok=True)
+
+# Create SQLite Database (Relational) - Stored in the persistent volume
+DATABASE_URL = "sqlite:///./data/ares_state.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -31,8 +34,8 @@ class VulnerabilityFindings(Base):
     severity = Column(String)
     approved = Column(String, default="pending") # pending, approved, denied
 
-# Initialize ChromaDB (Vector DB for RAG)
-chroma_client = chromadb.PersistentClient(path="./chroma_db")
+# Initialize ChromaDB (Vector DB for RAG) - Stored in the persistent volume
+chroma_client = chromadb.PersistentClient(path="./data/chroma_db")
 cve_collection = chroma_client.get_or_create_collection(name="cve_knowledgebase")
 
 def init_db():
