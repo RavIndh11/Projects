@@ -1,0 +1,37 @@
+[
+    {
+        "provider": "GitHub Pages",
+        "cname": ["github.io"],
+        "fingerprint": "There isn't a GitHub Pages site here."
+    },
+    {
+        "provider": "Heroku",
+        "cname": ["herokuapp.com"],
+        "fingerprint": "No such app"
+    },
+    {
+        "provider": "AWS S3",
+        "cname": ["s3.amazonaws.com"],
+        "fingerprint": "NoSuchBucket"
+    },
+    {
+        "provider": "Pantheon",
+        "cname": ["pantheonsite.io"],
+        "fingerprint": "The worksite you are looking for does not exist!"
+    },
+    {
+        "provider": "Surge",
+        "cname": ["surge.sh"],
+        "fingerprint": "project not found"
+    },
+    {
+        "provider": "Fastly",
+        "cname": ["fastly.net"],
+        "fingerprint": "Fastly error: unknown domain"
+    },
+    {
+        "provider": "Ghost",
+        "cname": ["ghost.io"],
+        "fingerprint": "The thing you were looking for is no longer here, or never was"
+    }
+]
