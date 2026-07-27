@@ -1,0 +1,3 @@
+## 2026-07-27 - HTTP Connection Reuse (TCP Handshake Overhead)
+**Learning:** Sending multiple sequential HTTP requests to the same origin without using a connection pool (like `requests.Session()`) incurs significant overhead due to repeated TCP handshakes and SSL negotiation. In security scanning tools like `cors_scanner`, where multiple payloads are tested against a single URL, this bottleneck is substantial.
+**Action:** Always utilize `requests.Session()` (or equivalent connection pooling mechanisms) when making multiple requests to the same target domain to reuse the underlying TCP connections, drastically improving performance.
