@@ -41,8 +41,8 @@ def test_calculate_hashes():
     data = b"test data"
     hashes = calculate_hashes(data)
 
-    assert hashes["md5"] == hashlib.md5(data).hexdigest()
-    assert hashes["sha1"] == hashlib.sha1(data).hexdigest()
+    assert hashes["md5"] == hashlib.md5(data, usedforsecurity=False).hexdigest()
+    assert hashes["sha1"] == hashlib.sha1(data, usedforsecurity=False).hexdigest()
     assert hashes["sha256"] == hashlib.sha256(data).hexdigest()
 
 def test_generate_yara_rule_basic():

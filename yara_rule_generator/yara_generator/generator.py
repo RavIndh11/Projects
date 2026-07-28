@@ -7,8 +7,8 @@ from .string_extractor import extract_strings, get_interesting_strings
 def calculate_hashes(data: bytes) -> Dict[str, str]:
     """Calculates common hashes for the given data."""
     return {
-        "md5": hashlib.md5(data).hexdigest(),
-        "sha1": hashlib.sha1(data).hexdigest(),
+        "md5": hashlib.md5(data, usedforsecurity=False).hexdigest(),
+        "sha1": hashlib.sha1(data, usedforsecurity=False).hexdigest(),
         "sha256": hashlib.sha256(data).hexdigest(),
     }
 
