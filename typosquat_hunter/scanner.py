@@ -26,7 +26,12 @@ class Scanner:
             result["a_records"] = [str(rdata) for rdata in answers]
             if result["a_records"]:
                 result["resolvable"] = True
-        except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.exception.Timeout, dns.resolver.NoNameservers):
+        except dns.resolver.NXDOMAIN:
+            # ⚡ Bolt: Early return on NXDOMAIN.
+            # If the domain itself does not exist, there's no point in checking for MX records.
+            # Skipping the MX lookup halves the number of DNS queries for unregistered domains.
+            return result
+        except (dns.resolver.NoAnswer, dns.exception.Timeout, dns.resolver.NoNameservers):
             pass
 
         # Check MX records
