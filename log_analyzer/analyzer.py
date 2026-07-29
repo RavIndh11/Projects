@@ -1,4 +1,5 @@
 import re
+import functools
 from typing import Dict, List, Tuple
 from collections import defaultdict
 
@@ -9,6 +10,19 @@ from .patterns import ATTACK_PATTERNS
 LOG_REGEX = re.compile(
     r'(?P<ip>\S+) \S+ \S+ \[(?P<timestamp>.*?)\] "(?P<method>\S+) (?P<path>.*?) (?P<protocol>HTTP/\S+)" (?P<status>\d{3}) (?P<size>\S+)(?: "(?P<referrer>.*?)" "(?P<user_agent>.*?)")?'
 )
+
+@functools.lru_cache(maxsize=1024)
+def _check_attack(target: str) -> str:
+    """
+    Checks a string against all attack patterns and caches the result.
+    Returns the attack type string if matched, else an empty string.
+    """
+    if not target or target == '-':
+        return ""
+    for attack_type, pattern in ATTACK_PATTERNS.items():
+        if pattern.search(target):
+            return attack_type
+    return ""
 
 class LogAnalyzer:
     def __init__(self):
@@ -31,17 +45,17 @@ class LogAnalyzer:
 
         # Check path, referrer, and user-agent for malicious patterns
         # Standard web attacks commonly manifest here
-        targets = [
+        targets = (
             fields.get('path', ''),
             fields.get('referrer', '') or '',
             fields.get('user_agent', '') or ''
-        ]
+        )
 
         for target in targets:
-            for attack_type, pattern in ATTACK_PATTERNS.items():
-                if pattern.search(target):
-                    self.total_attacks_detected += 1
-                    return True, attack_type, fields
+            attack_type = _check_attack(target)
+            if attack_type:
+                self.total_attacks_detected += 1
+                return True, attack_type, fields
 
         return False, "", fields
 
