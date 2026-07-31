@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  llm_prompt_guard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: llm-prompt-guard:latest
+    container_name: llm_prompt_guard
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.example
+    restart: unless-stopped
+    networks:
+      - prompt-guard-network
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  prompt-guard-network:
+    driver: bridge
