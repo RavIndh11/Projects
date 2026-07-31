@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Prompt Guard - SOC Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <header class="flex justify-between items-center mb-8 border-b pb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">LLM Prompt Guard</h1>
+                <p class="text-gray-600">AI Security Proxy Dashboard</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    System Active
+                </span>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">Recent Prompt Analyses</h2>
+                <button onclick="window.location.reload()" class="text-sm bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium py-1.5 px-4 rounded transition-colors">
+                    Refresh Logs
+                </button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Timestamp</th>
+                            <th scope="col" class="px-6 py-3 w-1/2">Prompt Snippet</th>
+                            <th scope="col" class="px-6 py-3">Status</th>
+                            <th scope="col" class="px-6 py-3">Severity</th>
+                            <th scope="col" class="px-6 py-3">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if not logs %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                No analysis logs available yet.
+                            </td>
+                        </tr>
+                        {% else %}
+                            {% for log in logs %}
+                            <tr class="bg-white border-b hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500">
+                                    {{ log.timestamp }}
+                                </td>
+                                <td class="px-6 py-4 font-mono text-xs text-gray-600 truncate max-w-xs" title="{{ log.prompt }}">
+                                    {{ log.prompt[:80] + '...' if log.prompt|length > 80 else log.prompt }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if log.result.is_safe %}
+                                    <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded border border-green-200">Safe</span>
+                                    {% else %}
+                                    <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded border border-red-200">Blocked</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if log.result.severity == 'None' %}
+                                    <span class="text-gray-500">-</span>
+                                    {% elif log.result.severity == 'Low' %}
+                                    <span class="text-blue-600 font-medium">Low</span>
+                                    {% elif log.result.severity == 'Medium' %}
+                                    <span class="text-yellow-600 font-medium">Medium</span>
+                                    {% elif log.result.severity == 'High' %}
+                                    <span class="text-orange-600 font-bold">High</span>
+                                    {% elif log.result.severity == 'Critical' %}
+                                    <span class="text-red-700 font-bold">Critical</span>
+                                    {% else %}
+                                    <span>{{ log.result.severity }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-xs">
+                                    {% if log.result.matches %}
+                                        <ul class="list-disc pl-4">
+                                        {% for match in log.result.matches %}
+                                            <li class="text-gray-700">{{ match.rule_name }}</li>
+                                        {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <span class="text-gray-400">None</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
