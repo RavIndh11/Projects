@@ -3,6 +3,10 @@ import requests
 # Set a timeout for HTTP requests
 TIMEOUT = 5
 
+# ⚡ Bolt: Use a global requests.Session to reuse underlying TCP connections
+# across multiple registry queries, significantly reducing latency from repeated handshakes.
+session = requests.Session()
+
 def check_npm_package(package_name: str) -> bool:
     """
     Checks if an NPM package exists on the public registry.
@@ -11,7 +15,7 @@ def check_npm_package(package_name: str) -> bool:
     """
     url = f"https://registry.npmjs.org/{package_name}"
     try:
-        response = requests.get(url, timeout=TIMEOUT)
+        response = session.get(url, timeout=TIMEOUT)
         if response.status_code == 200:
             return True
         elif response.status_code == 404:
@@ -31,7 +35,7 @@ def check_pypi_package(package_name: str) -> bool:
     """
     url = f"https://pypi.org/pypi/{package_name}/json"
     try:
-        response = requests.get(url, timeout=TIMEOUT)
+        response = session.get(url, timeout=TIMEOUT)
         if response.status_code == 200:
             return True
         elif response.status_code == 404:
