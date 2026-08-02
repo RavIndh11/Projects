@@ -32,3 +32,15 @@ def run_command(cmd):
 def safe_command(cmd):
     # This should not be flagged
     subprocess.call(cmd)
+
+def make_request(url):
+    import requests
+    # SAST-004
+    requests.get(url, verify=False)
+
+    # SAST-004
+    session = requests.Session()
+    session.post(url, verify=False, data={"key": "value"})
+
+    # This should not be flagged
+    requests.get(url, verify=True)
