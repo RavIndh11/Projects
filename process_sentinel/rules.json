@@ -1,0 +1,35 @@
+{
+  "suspicious_paths": [
+    "/tmp",
+    "/dev/shm",
+    "/var/tmp"
+  ],
+  "web_server_processes": [
+    "apache2",
+    "httpd",
+    "nginx",
+    "php-fpm",
+    "tomcat",
+    "java"
+  ],
+  "shell_processes": [
+    "sh",
+    "bash",
+    "dash",
+    "zsh",
+    "csh",
+    "tcsh",
+    "ksh"
+  ],
+  "suspicious_args": [
+    "-i",
+    "-c",
+    "base64",
+    "nc ",
+    "netcat",
+    "curl ",
+    "wget ",
+    "dev/tcp",
+    "dev/udp"
+  ]
+}
