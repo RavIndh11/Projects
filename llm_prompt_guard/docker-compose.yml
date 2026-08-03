@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  prompt-guard:
+    build: .
+    container_name: llm-prompt-guard
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.example
+    restart: unless-stopped
+    networks:
+      - security-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  security-net:
+    driver: bridge
