@@ -3,3 +3,6 @@
 **Action:** Always utilize `requests.Session()` (or equivalent connection pooling mechanisms) when making multiple requests to the same target domain to reuse the underlying TCP connections, drastically improving performance.## 2026-07-28 - DNS NXDOMAIN Early Return
 **Learning:** When resolving DNS records, if an 'A' record lookup raises `dns.resolver.NXDOMAIN`, it means the domain itself does not exist. Subsequent queries for other record types (like 'MX') on that same domain are guaranteed to also raise `NXDOMAIN`.
 **Action:** Always return early or skip subsequent DNS queries if an initial query raises `NXDOMAIN` to eliminate unnecessary network requests and significantly improve performance.
+## 2026-07-28 - HTTP Connection Reuse in Registry Checks
+**Learning:** Checking numerous dependencies one by one against a remote registry (like npm or PyPI) using `requests.get()` incurs significant overhead due to a new TCP connection and SSL handshake for every single package.
+**Action:** Use a global `requests.Session()` object when making many sequential HTTP requests to the same origin to leverage HTTP keep-alive, effectively reusing the underlying connection and dramatically reducing execution time.
