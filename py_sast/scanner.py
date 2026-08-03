@@ -45,6 +45,21 @@ class SecurityVisitor(ast.NodeVisitor):
                     if kw.arg == 'shell' and isinstance(kw.value, ast.Constant) and kw.value.value is True:
                         self.add_vuln(node, 'SAST-003', f"Command injection risk: 'subprocess.{node.func.attr}' called with shell=True.")
 
+        # Check for insecure requests with verify=False
+        if isinstance(node.func, ast.Attribute):
+            is_requests_call = False
+            # e.g., requests.get()
+            if isinstance(node.func.value, ast.Name) and node.func.value.id == 'requests' and node.func.attr in ['get', 'post', 'put', 'delete', 'patch', 'request', 'head', 'options']:
+                is_requests_call = True
+            # e.g., session.get()
+            elif node.func.attr in ['get', 'post', 'put', 'delete', 'patch', 'request', 'head', 'options']:
+                is_requests_call = True
+
+            if is_requests_call:
+                for kw in node.keywords:
+                    if kw.arg == 'verify' and isinstance(kw.value, ast.Constant) and kw.value.value is False:
+                        self.add_vuln(node, 'SAST-004', f"Insecure request: '{node.func.attr}' called with verify=False.")
+
         self.generic_visit(node)
 
 def scan_file(file_path: str) -> List[Vulnerability]:

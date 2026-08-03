@@ -12,6 +12,7 @@ Python applications often contain easily detectable vulnerabilities such as the 
     - `SAST-001`: Detects dangerous function calls (`eval()`, `exec()`).
     - `SAST-002`: Detects weak cryptographic hashing (`md5`, `sha1`).
     - `SAST-003`: Detects command injection risks (`subprocess.call`, `Popen`, `run` with `shell=True`).
+    - `SAST-004`: Detects insecure requests configuration (`requests.get`, `session.post`, etc. with `verify=False`).
 - **File and Directory Scanning**: Scan a single file or recursively scan an entire directory.
 - **Lightweight**: Uses standard library modules for scanning; no massive third-party dependencies required.
 
@@ -76,6 +77,6 @@ python scanner.py ./src
 
 ## Future Improvements
 - **Data Flow Analysis (Taint Tracking)**: Track variables to see if user input reaches dangerous sinks.
-- **Extended Rule Set**: Add checks for hardcoded credentials, insecure requests configurations (e.g., `verify=False`), and specific web framework vulnerabilities (e.g., Django, Flask).
+- **Extended Rule Set**: Add checks for hardcoded credentials, and specific web framework vulnerabilities (e.g., Django, Flask).
 - **Configuration File**: Allow users to enable/disable specific rules via a `.pysast.yml` configuration file.
 - **Export Options**: Allow exporting results to JSON or SARIF formats for integration with CI/CD platforms like GitHub Advanced Security or GitLab CI.

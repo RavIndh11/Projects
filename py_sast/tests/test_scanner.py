@@ -42,6 +42,12 @@ def test_subprocess_shell_detected(vulnerable_file):
     assert len(shell_vulns) >= 1
     assert any("shell=True" in v.description for v in shell_vulns)
 
+def test_insecure_request_detected(vulnerable_file):
+    vulns = scan_file(vulnerable_file)
+    request_vulns = [v for v in vulns if v.rule_id == 'SAST-004']
+    assert len(request_vulns) >= 2
+    assert any("verify=False" in v.description for v in request_vulns)
+
 def test_secure_file(secure_file):
     vulns = scan_file(secure_file)
     assert len(vulns) == 0
