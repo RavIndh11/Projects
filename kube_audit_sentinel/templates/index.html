@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kube Audit Sentinel Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid #334155; }
+        .badge-critical { background-color: rgba(220, 38, 38, 0.2); color: #ef4444; border: 1px solid rgba(220, 38, 38, 0.5); }
+        .badge-high { background-color: rgba(234, 88, 12, 0.2); color: #f97316; border: 1px solid rgba(234, 88, 12, 0.5); }
+        .badge-medium { background-color: rgba(202, 138, 4, 0.2); color: #eab308; border: 1px solid rgba(202, 138, 4, 0.5); }
+        .badge-low { background-color: rgba(37, 99, 235, 0.2); color: #3b82f6; border: 1px solid rgba(37, 99, 235, 0.5); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="glass-panel sticky top-0 z-50 p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <svg class="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                <h1 class="text-xl font-bold tracking-wider">KUBE AUDIT SENTINEL</h1>
+            </div>
+            <div class="flex space-x-4">
+                <div class="px-3 py-1 bg-slate-800 rounded-full text-sm font-medium border border-slate-700 flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>System Active</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-6 flex-grow flex flex-col space-y-6">
+        <!-- Stats Row -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="glass-panel p-5 rounded-xl shadow">
+                <h3 class="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Total Alerts</h3>
+                <p class="text-4xl font-bold text-white" id="total-alerts">0</p>
+            </div>
+            <div class="glass-panel p-5 rounded-xl shadow border-l-4 border-red-500">
+                <h3 class="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Critical</h3>
+                <p class="text-4xl font-bold text-red-500" id="critical-alerts">0</p>
+            </div>
+            <div class="glass-panel p-5 rounded-xl shadow border-l-4 border-orange-500">
+                <h3 class="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">High</h3>
+                <p class="text-4xl font-bold text-orange-500" id="high-alerts">0</p>
+            </div>
+            <div class="glass-panel p-5 rounded-xl shadow border-l-4 border-yellow-500">
+                <h3 class="text-slate-400 text-sm font-semibold uppercase tracking-wider mb-2">Medium</h3>
+                <p class="text-4xl font-bold text-yellow-500" id="medium-alerts">0</p>
+            </div>
+        </div>
+
+        <!-- Alert Feed -->
+        <div class="glass-panel rounded-xl shadow flex-grow flex flex-col">
+            <div class="p-5 border-b border-slate-700 flex justify-between items-center">
+                <h2 class="text-lg font-bold">Recent Security Alerts</h2>
+                <button onclick="fetchAlerts()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded text-sm transition flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Refresh</span>
+                </button>
+            </div>
+            <div class="p-0 overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-800/50 text-slate-300 text-sm uppercase tracking-wider">
+                            <th class="p-4 border-b border-slate-700">Timestamp</th>
+                            <th class="p-4 border-b border-slate-700">Severity</th>
+                            <th class="p-4 border-b border-slate-700">Rule</th>
+                            <th class="p-4 border-b border-slate-700">User</th>
+                            <th class="p-4 border-b border-slate-700">Resource</th>
+                            <th class="p-4 border-b border-slate-700">Namespace</th>
+                            <th class="p-4 border-b border-slate-700">Audit ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alerts-table-body" class="text-sm divide-y divide-slate-700/50">
+                        <!-- Rows will be populated by JS -->
+                    </tbody>
+                </table>
+                <div id="no-alerts-msg" class="p-8 text-center text-slate-500 hidden">
+                    No alerts generated yet. Waiting for events...
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function escapeHtml(unsafe) {
+            if (!unsafe) return "";
+            return String(unsafe)
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+        function getSeverityBadgeClass(severity) {
+            switch(severity.toLowerCase()) {
+                case 'critical': return 'badge-critical';
+                case 'high': return 'badge-high';
+                case 'medium': return 'badge-medium';
+                case 'low': return 'badge-low';
+                default: return 'bg-slate-700 text-slate-300';
+            }
+        }
+
+        async function fetchAlerts() {
+            try {
+                const response = await fetch('/api/v1/alerts');
+                const data = await response.json();
+                const alerts = data.alerts;
+
+                // Update stats
+                document.getElementById('total-alerts').innerText = alerts.length;
+                document.getElementById('critical-alerts').innerText = alerts.filter(a => a.severity.toLowerCase() === 'critical').length;
+                document.getElementById('high-alerts').innerText = alerts.filter(a => a.severity.toLowerCase() === 'high').length;
+                document.getElementById('medium-alerts').innerText = alerts.filter(a => a.severity.toLowerCase() === 'medium').length;
+
+                const tbody = document.getElementById('alerts-table-body');
+                const noAlertsMsg = document.getElementById('no-alerts-msg');
+                tbody.innerHTML = '';
+
+                if (alerts.length === 0) {
+                    noAlertsMsg.classList.remove('hidden');
+                } else {
+                    noAlertsMsg.classList.add('hidden');
+                    alerts.forEach(alert => {
+                        const date = escapeHtml(new Date(alert.timestamp).toLocaleString());
+                        const severity = escapeHtml(alert.severity);
+                        const badgeClass = getSeverityBadgeClass(alert.severity);
+                        const rule_name = escapeHtml(alert.rule_name);
+                        const user = escapeHtml(alert.user);
+                        const resource = escapeHtml(alert.resource);
+                        const namespace = escapeHtml(alert.namespace);
+                        const audit_id = escapeHtml(alert.audit_id);
+
+                        const tr = document.createElement('tr');
+                        tr.className = 'hover:bg-slate-800/30 transition';
+                        tr.innerHTML = `
+                            <td class="p-4 whitespace-nowrap text-slate-300">${date}</td>
+                            <td class="p-4 whitespace-nowrap">
+                                <span class="px-2 py-1 rounded text-xs font-semibold uppercase ${badgeClass}">${severity}</span>
+                            </td>
+                            <td class="p-4 font-medium">${rule_name}</td>
+                            <td class="p-4 font-mono text-slate-400">${user}</td>
+                            <td class="p-4 text-slate-300">${resource}</td>
+                            <td class="p-4 text-slate-300">${namespace}</td>
+                            <td class="p-4 font-mono text-xs text-slate-500" title="${audit_id}">...${audit_id.substring(0,8)}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching alerts:", error);
+            }
+        }
+
+        // Initial fetch and set interval
+        fetchAlerts();
+        setInterval(fetchAlerts, 5000);
+    </script>
+</body>
+</html>
