@@ -17,16 +17,16 @@
             <h2 class="text-xl font-semibold mb-4 border-b pb-2">Analyze Prompt</h2>
             <form id="analyze-form" class="space-y-4">
                 <div>
-                    <label for="prompt" class="block text-sm font-medium text-gray-700 mb-1">Enter Prompt Payload:</label>
-                    <textarea id="prompt" name="prompt" rows="5" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 border p-2 text-sm font-mono" placeholder="e.g., Ignore all previous instructions and..."></textarea>
+                    <label for="prompt" class="block text-sm font-medium text-gray-700 mb-1">Enter Prompt Payload: <span class="text-red-500">*</span></label>
+                    <textarea id="prompt" name="prompt" rows="5" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 border p-2 text-sm font-mono" placeholder="e.g., Ignore all previous instructions and..." required aria-required="true"></textarea>
                 </div>
-                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <button id="submit-btn" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
                     Analyze Payload
                 </button>
             </form>
         </main>
 
-        <section id="results-section" class="hidden">
+        <section id="results-section" class="hidden" aria-live="polite">
             <div class="bg-white rounded-lg shadow-md p-6">
                 <h2 class="text-xl font-semibold mb-4 border-b pb-2">Analysis Results</h2>
 
@@ -60,6 +60,16 @@
             const prompt = document.getElementById('prompt').value;
             if (!prompt) return;
 
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Analyzing...
+            `;
+
             try {
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
@@ -78,6 +88,9 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert('An error occurred during analysis.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Analyze Payload';
             }
         });
 
