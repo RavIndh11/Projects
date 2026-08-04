@@ -6,3 +6,6 @@
 ## 2026-07-28 - HTTP Connection Reuse in Registry Checks
 **Learning:** Checking numerous dependencies one by one against a remote registry (like npm or PyPI) using `requests.get()` incurs significant overhead due to a new TCP connection and SSL handshake for every single package.
 **Action:** Use a global `requests.Session()` object when making many sequential HTTP requests to the same origin to leverage HTTP keep-alive, effectively reusing the underlying connection and dramatically reducing execution time.
+## 2026-08-03 - Optimize IAM Privilege Escalation Scanner regex matching
+**Learning:** Checking AWS IAM action globs directly using `fnmatch` within nested loops causes a significant performance bottleneck due to continuous regex translation and string matching overhead. Python's `re` module allows combining multiple regexes using `|` effectively creating an `O(1)` check when compiled beforehand.
+**Action:** Always consider pre-compiling rules translated by `fnmatch.translate` into a single large regex for tools that repeatedly check multiple static conditions against many dynamic inputs.

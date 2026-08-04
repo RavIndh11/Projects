@@ -1,6 +1,7 @@
 import json
 import fnmatch
 import logging
+import re
 
 from rules import PRIVESC_VECTORS
 
@@ -30,8 +31,8 @@ def extract_not_actions(statement):
 class PolicyEvaluator:
     def __init__(self, policy_document):
         self.policy = policy_document
-        self.allow_patterns = []
-        self.deny_patterns = []
+        self.allow_regex = None
+        self.deny_regex = None
 
         self._parse_policy()
 
@@ -40,6 +41,9 @@ class PolicyEvaluator:
         statements = self.policy.get("Statement", [])
         if isinstance(statements, dict):
             statements = [statements]
+
+        allow_patterns_raw = []
+        deny_patterns_raw = []
 
         for stmt in statements:
             effect = stmt.get("Effect", "Allow")
@@ -52,9 +56,19 @@ class PolicyEvaluator:
             # A more robust tool would check Resource as well.
 
             if effect == "Allow":
-                self.allow_patterns.extend(actions)
+                allow_patterns_raw.extend(actions)
             elif effect == "Deny":
-                self.deny_patterns.extend(actions)
+                deny_patterns_raw.extend(actions)
+
+        # ⚡ Bolt: Optimize matching by pre-compiling rules into single regexes
+        # This prevents translating string patterns to regex over and over
+        if allow_patterns_raw:
+            combined = "|".join(fnmatch.translate(p.lower()) for p in allow_patterns_raw)
+            self.allow_regex = re.compile(combined)
+
+        if deny_patterns_raw:
+            combined = "|".join(fnmatch.translate(p.lower()) for p in deny_patterns_raw)
+            self.deny_regex = re.compile(combined)
 
     def is_action_allowed(self, action):
         """
@@ -62,15 +76,15 @@ class PolicyEvaluator:
         An action is allowed if it matches at least one allow pattern
         and does NOT match any deny pattern.
         """
+        action_lower = action.lower()
+
         # 1. Check if it's denied
-        for pattern in self.deny_patterns:
-            if action_matches(pattern, action):
-                return False
+        if self.deny_regex and self.deny_regex.match(action_lower):
+            return False
 
         # 2. Check if it's allowed
-        for pattern in self.allow_patterns:
-            if action_matches(pattern, action):
-                return True
+        if self.allow_regex and self.allow_regex.match(action_lower):
+            return True
 
         return False
 
