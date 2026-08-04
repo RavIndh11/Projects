@@ -5,16 +5,17 @@ import json
 class CloudTrailAnalyzer:
     def __init__(self):
         # Define some common malicious patterns
-        self.defense_evasion_events = [
+        # ⚡ Bolt: Use sets instead of lists for O(1) membership testing.
+        self.defense_evasion_events = {
             "StopLogging",
             "DeleteTrail",
             "UpdateTrail",
             "DeleteFlowLogs",
             "DeleteEventBus",
             "DisableSecurityHub"
-        ]
+        }
 
-        self.privesc_events = [
+        self.privesc_events = {
             "PutUserPolicy",
             "PutGroupPolicy",
             "PutRolePolicy",
@@ -24,15 +25,15 @@ class CloudTrailAnalyzer:
             "CreateAccessKey",
             "CreateLoginProfile",
             "UpdateLoginProfile"
-        ]
+        }
 
-        self.recon_events = [
+        self.recon_events = {
             "DescribeTrails",
             "GetCallerIdentity",
             "ListUsers",
             "ListRoles",
             "ListBuckets"
-        ]
+        }
 
     def analyze(self, events: List[CloudTrailEvent]) -> List[Finding]:
         findings = []
