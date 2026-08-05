@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  beacon-hunter:
+    build: .
+    container_name: c2-beacon-hunter
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - API_KEY=${API_KEY:-default-dev-key}
+    restart: unless-stopped
+    networks:
+      - hunter-net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+
+networks:
+  hunter-net:
+    driver: bridge

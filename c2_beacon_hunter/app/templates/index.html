@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C2 Beacon Hunter - SOC Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-200 p-8 font-sans">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center border-b border-gray-700 pb-4 mb-8">
+            <h1 class="text-3xl font-bold text-white flex items-center">
+                <svg class="w-8 h-8 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                C2 Beacon Hunter
+            </h1>
+            <div class="text-sm bg-gray-800 py-1 px-3 rounded-full border border-gray-700">
+                System Status: <span class="text-green-400 font-semibold">Monitoring Active</span>
+            </div>
+        </header>
+
+        <section class="mb-10">
+            <h2 class="text-xl font-semibold mb-4 text-gray-300">Recent Beacon Alerts (Top 100)</h2>
+
+            <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-700">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-750 border-b border-gray-600 text-gray-400 text-sm">
+                            <th class="p-4">Severity</th>
+                            <th class="p-4">Source IP</th>
+                            <th class="p-4">Dest IP</th>
+                            <th class="p-4">Port</th>
+                            <th class="p-4">Connections</th>
+                            <th class="p-4">Jitter</th>
+                            <th class="p-4">Avg Interval</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if alerts %}
+                            {% for alert in alerts %}
+                            <tr class="border-b border-gray-700 hover:bg-gray-700 transition-colors">
+                                <td class="p-4">
+                                    {% if alert.severity == 'Critical' %}
+                                        <span class="px-2 py-1 bg-red-900 text-red-200 rounded text-xs font-bold border border-red-700">CRITICAL</span>
+                                    {% elif alert.severity == 'High' %}
+                                        <span class="px-2 py-1 bg-orange-900 text-orange-200 rounded text-xs font-bold border border-orange-700">HIGH</span>
+                                    {% elif alert.severity == 'Medium' %}
+                                        <span class="px-2 py-1 bg-yellow-900 text-yellow-200 rounded text-xs font-bold border border-yellow-700">MEDIUM</span>
+                                    {% else %}
+                                        <span class="px-2 py-1 bg-blue-900 text-blue-200 rounded text-xs font-bold border border-blue-700">LOW</span>
+                                    {% endif %}
+                                </td>
+                                <td class="p-4 font-mono text-sm text-gray-300">{{ alert.src_ip }}</td>
+                                <td class="p-4 font-mono text-sm text-gray-300">{{ alert.dst_ip }}</td>
+                                <td class="p-4 text-sm">{{ alert.dst_port }}</td>
+                                <td class="p-4 text-sm">{{ alert.connection_count }}</td>
+                                <td class="p-4 text-sm text-red-400 font-semibold">{{ alert.jitter_percent }}%</td>
+                                <td class="p-4 text-sm">{{ alert.avg_interval_seconds }}s</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="p-8 text-center text-gray-500 italic">No beacon alerts detected recently.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer class="text-center text-sm text-gray-600 mt-12">
+            Automated Threat Hunting & Detection Engineering
+        </footer>
+    </div>
+</body>
+</html>
