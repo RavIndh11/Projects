@@ -5,3 +5,6 @@
 ## 2025-02-28 - Explicit Labeling and Synchronous Form Feedback
 **Learning:** Screen readers may not inherently associate a heading (like `<h2>`) with an adjacent input field without explicit linkage, and synchronous file uploads lack native feedback during submission, leading to poor UX and potential double submissions.
 **Action:** Always wrap instructional headings in a `<label for="...">` tied to the input's `id`, and implement immediate visual feedback (e.g., loading spinner, disabled state) via an `onsubmit` handler for synchronous form submissions.
+## 2024-05-14 - Visual loading states on auto-refreshing UI
+**Learning:** When combining manual user actions (like a "Refresh" button) with background auto-polling in a dashboard, visual loading states (like spinners and disabled buttons) should only be triggered by the manual action. Triggering them on the auto-polling interval creates an annoying and distracting UI flicker.
+**Action:** Always check if a dashboard has a `setInterval` for fetching data before adding loading states. Pass an `isManual` flag from the button's event handler to the fetch function to selectively apply the loading UI only when the user explicitly interacts with it.
