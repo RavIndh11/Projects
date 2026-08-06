@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  docker-socket-guard:
+    build: .
+    container_name: docker-socket-guard
+    ports:
+      - "8000:8000"
+    environment:
+      - LOG_LEVEL=INFO
+      - ALLOW_PRIVILEGED_MODE=false
+      - READ_ONLY_MODE=false
+      - DOCKER_SOCKET_PATH=/var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    # Using 'user: root' here ONLY because by default the docker socket
+    # requires root or 'docker' group permissions to read/write.
+    # In a real production setup, one should map the socket with correct permissions
+    # or add the appuser to the docker group explicitly.
+    user: root
+    restart: unless-stopped
+    networks:
+      - guard_network
+
+networks:
+  guard_network:
+    driver: bridge
