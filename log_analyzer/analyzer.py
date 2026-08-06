@@ -2,7 +2,7 @@ import re
 from typing import Dict, List, Tuple
 from collections import defaultdict
 
-from .patterns import ATTACK_PATTERNS
+from .patterns import ATTACK_PATTERNS_LIST, COMBINED_ATTACK_PATTERN
 
 # Typical Common/Combined Log Format regex.
 # Example: 127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326
@@ -38,10 +38,14 @@ class LogAnalyzer:
         ]
 
         for target in targets:
-            for attack_type, pattern in ATTACK_PATTERNS.items():
-                if pattern.search(target):
-                    self.total_attacks_detected += 1
-                    return True, attack_type, fields
+            if not target or target == "-":
+                continue
+            # Fast path check per target to maintain regex anchors
+            if COMBINED_ATTACK_PATTERN.search(target):
+                for attack_type, pattern in ATTACK_PATTERNS_LIST:
+                    if pattern.search(target):
+                        self.total_attacks_detected += 1
+                        return True, attack_type, fields
 
         return False, "", fields
 
