@@ -9,3 +9,6 @@
 ## 2026-08-03 - Optimize IAM Privilege Escalation Scanner regex matching
 **Learning:** Checking AWS IAM action globs directly using `fnmatch` within nested loops causes a significant performance bottleneck due to continuous regex translation and string matching overhead. Python's `re` module allows combining multiple regexes using `|` effectively creating an `O(1)` check when compiled beforehand.
 **Action:** Always consider pre-compiling rules translated by `fnmatch.translate` into a single large regex for tools that repeatedly check multiple static conditions against many dynamic inputs.
+## 2026-08-05 - Avoid expensive statistics computations
+**Learning:** In data analysis pipelines, computing variance or standard deviation (`statistics.pstdev`) is O(N) with multiple passes and relatively high constant factors in Python.
+**Action:** Always evaluate gating conditions (like checking a simple mean against a threshold) BEFORE executing expensive statistical functions to quickly filter out irrelevant data and speed up the pipeline.

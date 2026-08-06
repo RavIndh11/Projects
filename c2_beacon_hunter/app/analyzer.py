@@ -42,6 +42,13 @@ class BeaconAnalyzer:
             # Calculate stats
             mean_interval = statistics.mean(intervals)
 
+            # ⚡ Bolt: Early skip if mean_interval is below threshold.
+            # Calculating standard deviation (statistics.pstdev) is computationally expensive.
+            # Skipping it for traffic that doesn't meet the interval threshold
+            # significantly improves analysis speed on large datasets.
+            if mean_interval < self.min_interval_seconds:
+                continue
+
             # If standard deviation is 0, jitter is 0
             if mean_interval == 0:
                 jitter_percent = 0.0
@@ -50,7 +57,7 @@ class BeaconAnalyzer:
                 jitter_percent = (std_dev / mean_interval) * 100
 
             # Check if it matches beaconing profile (low jitter, sufficient frequency)
-            if jitter_percent <= self.max_jitter_percent and mean_interval >= self.min_interval_seconds:
+            if jitter_percent <= self.max_jitter_percent:
                 # Determine severity based on jitter and connection count
                 if jitter_percent < 5.0 and len(connection_logs) > 20:
                     severity = "Critical"
