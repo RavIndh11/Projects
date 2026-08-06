@@ -60,8 +60,8 @@
         <div class="glass-panel rounded-xl shadow flex-grow flex flex-col">
             <div class="p-5 border-b border-slate-700 flex justify-between items-center">
                 <h2 class="text-lg font-bold">Recent Security Alerts</h2>
-                <button onclick="fetchAlerts()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded text-sm transition flex items-center space-x-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <button id="refresh-btn" onclick="fetchAlerts(true)" aria-label="Refresh alerts" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded text-sm transition flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     <span>Refresh</span>
                 </button>
             </div>
@@ -110,7 +110,21 @@
             }
         }
 
-        async function fetchAlerts() {
+        const originalBtnContent = `
+                    <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Refresh</span>
+        `;
+        const loadingBtnContent = `
+                    <svg aria-hidden="true" class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>Refreshing...</span>
+        `;
+
+        async function fetchAlerts(isManual = false) {
+            const btn = document.getElementById('refresh-btn');
+            if (isManual && btn) {
+                btn.disabled = true;
+                btn.innerHTML = loadingBtnContent;
+            }
             try {
                 const response = await fetch('/api/v1/alerts');
                 const data = await response.json();
@@ -158,6 +172,11 @@
                 }
             } catch (error) {
                 console.error("Error fetching alerts:", error);
+            } finally {
+                if (isManual && btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnContent;
+                }
             }
         }
 
