@@ -18,7 +18,10 @@
             <form id="analyze-form" class="space-y-4">
                 <div>
                     <label for="prompt" class="block text-sm font-medium text-gray-700 mb-1">Enter Prompt Payload: <span class="text-red-500">*</span></label>
-                    <textarea id="prompt" name="prompt" rows="5" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 border p-2 text-sm font-mono" placeholder="e.g., Ignore all previous instructions and..." required aria-required="true"></textarea>
+                    <textarea id="prompt" name="prompt" rows="5" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 border p-2 text-sm font-mono" placeholder="e.g., Ignore all previous instructions and..." required aria-required="true" maxlength="10000" aria-describedby="prompt-char-count"></textarea>
+                    <div class="flex justify-end mt-1">
+                        <span id="prompt-char-count" class="text-xs text-gray-500">0 / 10000</span>
+                    </div>
                 </div>
                 <button id="submit-btn" type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
                     Analyze Payload
@@ -55,6 +58,24 @@
     </div>
 
     <script>
+        const promptTextarea = document.getElementById('prompt');
+        const charCountEl = document.getElementById('prompt-char-count');
+        const MAX_LENGTH = 10000;
+        const WARNING_THRESHOLD = 9000;
+
+        promptTextarea.addEventListener('input', () => {
+            const currentLength = promptTextarea.value.length;
+            charCountEl.textContent = `${currentLength} / ${MAX_LENGTH}`;
+
+            if (currentLength >= MAX_LENGTH) {
+                charCountEl.className = 'text-xs text-red-600 font-bold';
+            } else if (currentLength >= WARNING_THRESHOLD) {
+                charCountEl.className = 'text-xs text-orange-500 font-medium';
+            } else {
+                charCountEl.className = 'text-xs text-gray-500';
+            }
+        });
+
         document.getElementById('analyze-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const prompt = document.getElementById('prompt').value;

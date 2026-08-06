@@ -8,3 +8,7 @@
 ## 2024-05-14 - Visual loading states on auto-refreshing UI
 **Learning:** When combining manual user actions (like a "Refresh" button) with background auto-polling in a dashboard, visual loading states (like spinners and disabled buttons) should only be triggered by the manual action. Triggering them on the auto-polling interval creates an annoying and distracting UI flicker.
 **Action:** Always check if a dashboard has a `setInterval` for fetching data before adding loading states. Pass an `isManual` flag from the button's event handler to the fetch function to selectively apply the loading UI only when the user explicitly interacts with it.
+
+## 2024-05-15 - Explicit Constraints on Textareas
+**Learning:** When API models have strict character limits (like 10k chars for a prompt analyzer), the frontend must explicitly communicate and enforce this via `maxlength` and a visual character counter. Otherwise, users might paste huge payloads, experience confusing API errors or silent failures, and not know what went wrong.
+**Action:** Always verify backend field constraints (min/max length) and mirror them on frontend form elements with real-time visual and accessible feedback using `aria-describedby` (without `aria-live` on every keystroke to avoid screen reader spam).
