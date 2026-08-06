@@ -18,3 +18,14 @@ ATTACK_PATTERNS = {
         re.IGNORECASE,
     ),
 }
+
+# Remove any leading (?i) from patterns to combine them safely with global re.IGNORECASE
+combined_patterns = []
+for p in ATTACK_PATTERNS.values():
+    pat = p.pattern
+    if pat.startswith('(?i)'):
+        pat = pat[4:]
+    combined_patterns.append(pat)
+
+COMBINED_ATTACK_PATTERN = re.compile("|".join(combined_patterns), re.IGNORECASE)
+ATTACK_PATTERNS_LIST = list(ATTACK_PATTERNS.items())

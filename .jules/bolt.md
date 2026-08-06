@@ -12,3 +12,6 @@
 ## 2026-08-05 - Avoid expensive statistics computations
 **Learning:** In data analysis pipelines, computing variance or standard deviation (`statistics.pstdev`) is O(N) with multiple passes and relatively high constant factors in Python.
 **Action:** Always evaluate gating conditions (like checking a simple mean against a threshold) BEFORE executing expensive statistical functions to quickly filter out irrelevant data and speed up the pipeline.
+## 2026-08-06 - Regex Fast-path Optimization
+**Learning:** When scanning multiple extracted strings (like logs) for multiple attack patterns, doing individual regex matches is slow ($O(N*M)$ regex evaluations). Combining patterns with `|` into a single "fast-path" regex `COMBINED_ATTACK_PATTERN` is significantly faster. However, string concatenation of targets (e.g., `path + referrer`) breaks end-of-string regex anchors (`$`). Also, trying to extract groups as a tuple with `match.group(a, b)` risks `IndexError` if the log format regex does not define all those named groups.
+**Action:** When implementing combined regex fast-paths, evaluate targets individually to preserve anchor semantics, and use safe dict methods like `.get()` when extracting named groups from dynamic regexes.
