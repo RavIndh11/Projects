@@ -8,3 +8,7 @@
 ## 2024-05-14 - Visual loading states on auto-refreshing UI
 **Learning:** When combining manual user actions (like a "Refresh" button) with background auto-polling in a dashboard, visual loading states (like spinners and disabled buttons) should only be triggered by the manual action. Triggering them on the auto-polling interval creates an annoying and distracting UI flicker.
 **Action:** Always check if a dashboard has a `setInterval` for fetching data before adding loading states. Pass an `isManual` flag from the button's event handler to the fetch function to selectively apply the loading UI only when the user explicitly interacts with it.
+
+## 2026-08-07 - Keyboard Shortcut Hint Design Pattern
+**Learning:** Adding a keyboard shortcut (like Cmd/Ctrl + Enter) is extremely effective for power-user tools like prompt analyzers where users type multi-line inputs. Presenting the hint using semantic `<kbd>` tags inside a helper text span integrates perfectly with existing Tailwind layouts and provides immediate discoverability without visual clutter.
+**Action:** Always consider keyboard submission shortcuts for multi-line `textarea` inputs in internal or power-user tooling, and consistently use the styled `<kbd>` pattern for hints to ensure cross-app consistency and visual accessibility.
