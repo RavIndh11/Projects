@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+jinja2
+python-multipart
+pytest
+httpx
+pyyaml
+python-json-logger
