@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  api_shadow_hunter:
+    build: .
+    container_name: api_shadow_hunter
+    ports:
+      - "8000:8000"
+    env_file: .env
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
