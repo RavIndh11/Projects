@@ -8,3 +8,7 @@
 ## 2024-05-14 - Visual loading states on auto-refreshing UI
 **Learning:** When combining manual user actions (like a "Refresh" button) with background auto-polling in a dashboard, visual loading states (like spinners and disabled buttons) should only be triggered by the manual action. Triggering them on the auto-polling interval creates an annoying and distracting UI flicker.
 **Action:** Always check if a dashboard has a `setInterval` for fetching data before adding loading states. Pass an `isManual` flag from the button's event handler to the fetch function to selectively apply the loading UI only when the user explicitly interacts with it.
+
+## 2025-02-28 - Keyboard Accessibility for Textarea Form Submissions
+**Learning:** For forms containing a `<textarea>` as the primary input (like typing a prompt or a message), pressing `Enter` inserts a newline instead of submitting the form. This forces keyboard users to use `Tab` and `Enter` or a mouse click to submit. Adding a keyboard shortcut like `Ctrl+Enter` or `Cmd+Enter` improves efficiency, but it must be clearly indicated in the UI.
+**Action:** When a form relies heavily on a `<textarea>`, implement a `keydown` listener for `Ctrl+Enter` / `Cmd+Enter` to dispatch a `submit` event, and visually indicate this shortcut using a `<kbd>` element inside the submit button.
