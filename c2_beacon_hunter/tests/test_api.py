@@ -1,10 +1,14 @@
 import pytest
-from fastapi.testclient import TestClient
-from app.main import app
 import os
 
+# Set API_KEY in environment before importing app so it doesn't fail
+os.environ["API_KEY"] = "test-key"
+
+from fastapi.testclient import TestClient
+from app.main import app
+
 client = TestClient(app)
-API_KEY = os.getenv("API_KEY", "default-dev-key")
+API_KEY = "test-key"
 HEADERS = {"X-API-Key": API_KEY}
 
 def test_health_check():

@@ -27,10 +27,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 API_KEY = os.environ.get("API_KEY")
-if not API_KEY and os.environ.get("PYTEST_CURRENT_TEST") is None:
+if not API_KEY:
     raise ValueError("API_KEY environment variable is not set. Ensure secure deployment.")
-# fallback just for tests
-API_KEY = API_KEY or "default-dev-key"
 
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
