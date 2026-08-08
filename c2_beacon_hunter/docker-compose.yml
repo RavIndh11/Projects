@@ -9,7 +9,7 @@ services:
     env_file:
       - .env
     environment:
-      - API_KEY=${API_KEY:-default-dev-key}
+      - API_KEY=${API_KEY:?API_KEY environment variable is not set}
     restart: unless-stopped
     networks:
       - hunter-net
