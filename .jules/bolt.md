@@ -1,14 +1,3 @@
-## 2026-07-27 - HTTP Connection Reuse (TCP Handshake Overhead)
-**Learning:** Sending multiple sequential HTTP requests to the same origin without using a connection pool (like `requests.Session()`) incurs significant overhead due to repeated TCP handshakes and SSL negotiation. In security scanning tools like `cors_scanner`, where multiple payloads are tested against a single URL, this bottleneck is substantial.
-**Action:** Always utilize `requests.Session()` (or equivalent connection pooling mechanisms) when making multiple requests to the same target domain to reuse the underlying TCP connections, drastically improving performance.## 2026-07-28 - DNS NXDOMAIN Early Return
-**Learning:** When resolving DNS records, if an 'A' record lookup raises `dns.resolver.NXDOMAIN`, it means the domain itself does not exist. Subsequent queries for other record types (like 'MX') on that same domain are guaranteed to also raise `NXDOMAIN`.
-**Action:** Always return early or skip subsequent DNS queries if an initial query raises `NXDOMAIN` to eliminate unnecessary network requests and significantly improve performance.
-## 2026-07-28 - HTTP Connection Reuse in Registry Checks
-**Learning:** Checking numerous dependencies one by one against a remote registry (like npm or PyPI) using `requests.get()` incurs significant overhead due to a new TCP connection and SSL handshake for every single package.
-**Action:** Use a global `requests.Session()` object when making many sequential HTTP requests to the same origin to leverage HTTP keep-alive, effectively reusing the underlying connection and dramatically reducing execution time.
-## 2026-08-03 - Optimize IAM Privilege Escalation Scanner regex matching
-**Learning:** Checking AWS IAM action globs directly using `fnmatch` within nested loops causes a significant performance bottleneck due to continuous regex translation and string matching overhead. Python's `re` module allows combining multiple regexes using `|` effectively creating an `O(1)` check when compiled beforehand.
-**Action:** Always consider pre-compiling rules translated by `fnmatch.translate` into a single large regex for tools that repeatedly check multiple static conditions against many dynamic inputs.
-## 2026-08-05 - Avoid expensive statistics computations
-**Learning:** In data analysis pipelines, computing variance or standard deviation (`statistics.pstdev`) is O(N) with multiple passes and relatively high constant factors in Python.
-**Action:** Always evaluate gating conditions (like checking a simple mean against a threshold) BEFORE executing expensive statistical functions to quickly filter out irrelevant data and speed up the pipeline.
+## 2025-02-28 - Regex Catastrophic Backtracking in Log Parsing
+**Learning:** Python's `re` module can suffer from massive performance degradation due to non-greedy wildcards (e.g., `.*?`) when parsing structured formats like access logs. This creates an unoptimized cold path where parsing can take several times longer than necessary.
+**Action:** When extracting fields from string-based formats, replace non-greedy wildcards with negated character classes (e.g., `[^\]]+` or `[^"]*?`) and anchor the string with `^` to prevent heavy backtracking overhead, significantly improving parse time per line.
