@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Shadow Hunter Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+    <nav class="bg-slate-800 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold"><i class="fa-solid fa-ghost mr-2 text-indigo-400"></i>API Shadow Hunter</h1>
+            <div class="space-x-4">
+                <span class="text-sm text-gray-300">SOC Analysis Tool</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-6 max-w-6xl">
+
+        <!-- Upload Section -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-8 border border-gray-200">
+            <h2 class="text-lg font-semibold mb-4 border-b pb-2"><i class="fa-solid fa-cloud-arrow-up mr-2 text-gray-500"></i>Data Ingestion</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Spec Upload -->
+                <div class="p-4 bg-gray-50 rounded border border-gray-200">
+                    <h3 class="font-medium mb-2">1. Upload OpenAPI Spec</h3>
+                    <p class="text-sm text-gray-500 mb-4">YAML or JSON format defining your expected APIs.</p>
+                    <form id="spec-form" class="flex items-center space-x-2">
+                        <input type="file" id="spec-file" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                        <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition text-sm font-medium">Upload</button>
+                    </form>
+                    <div id="spec-status" class="mt-2 text-sm text-green-600 hidden"></div>
+                </div>
+
+                <!-- Log Upload -->
+                <div class="p-4 bg-gray-50 rounded border border-gray-200">
+                    <h3 class="font-medium mb-2">2. Upload Access Logs</h3>
+                    <p class="text-sm text-gray-500 mb-4">Raw access logs containing HTTP requests.</p>
+                    <form id="log-form" class="flex items-center space-x-2">
+                        <input type="file" id="log-file" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition text-sm font-medium">Upload</button>
+                    </form>
+                    <div id="log-status" class="mt-2 text-sm text-green-600 hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Shadow APIs -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col">
+                <div class="p-4 border-b bg-red-50 flex justify-between items-center rounded-t-lg">
+                    <h2 class="text-lg font-bold text-red-800"><i class="fa-solid fa-user-secret mr-2"></i>Shadow APIs</h2>
+                    <span class="bg-red-200 text-red-800 text-xs font-bold px-2 py-1 rounded-full">{{ results.shadow_apis|length }} Found</span>
+                </div>
+                <div class="p-4 flex-grow overflow-auto max-h-96">
+                    <p class="text-sm text-gray-600 mb-4">Endpoints detected in traffic but missing from OpenAPI spec. Potential unmanaged or undocumented APIs.</p>
+
+                    {% if results.shadow_apis %}
+                    <ul class="space-y-2">
+                        {% for api in results.shadow_apis %}
+                        <li class="p-3 bg-white border border-red-100 rounded-md shadow-sm flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xs font-bold px-2 py-1 rounded bg-gray-200 text-gray-700">{{ api.method }}</span>
+                                <span class="font-mono text-sm">{{ api.path }}</span>
+                            </div>
+                            <span class="text-xs font-semibold text-red-600 bg-red-100 px-2 py-1 rounded">High Risk</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="text-center py-8 text-gray-400">
+                        <i class="fa-solid fa-check-circle text-4xl mb-2 text-green-300"></i>
+                        <p>No Shadow APIs detected.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Zombie APIs -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col">
+                <div class="p-4 border-b bg-orange-50 flex justify-between items-center rounded-t-lg">
+                    <h2 class="text-lg font-bold text-orange-800"><i class="fa-solid fa-skull mr-2"></i>Zombie APIs</h2>
+                    <span class="bg-orange-200 text-orange-800 text-xs font-bold px-2 py-1 rounded-full">{{ results.zombie_apis|length }} Found</span>
+                </div>
+                <div class="p-4 flex-grow overflow-auto max-h-96">
+                    <p class="text-sm text-gray-600 mb-4">Endpoints defined in OpenAPI spec but never accessed in logs. Potential deprecated or unused code.</p>
+
+                    {% if results.zombie_apis %}
+                    <ul class="space-y-2">
+                        {% for api in results.zombie_apis %}
+                        <li class="p-3 bg-white border border-orange-100 rounded-md shadow-sm flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xs font-bold px-2 py-1 rounded bg-gray-200 text-gray-700">{{ api.method }}</span>
+                                <span class="font-mono text-sm">{{ api.path }}</span>
+                            </div>
+                            <span class="text-xs font-semibold text-orange-600 bg-orange-100 px-2 py-1 rounded">Med Risk</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="text-center py-8 text-gray-400">
+                        <i class="fa-solid fa-check-circle text-4xl mb-2 text-green-300"></i>
+                        <p>No Zombie APIs detected.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        document.getElementById('spec-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('spec-file');
+            if (fileInput.files.length === 0) return alert('Select a spec file');
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/api/upload-spec', { method: 'POST', body: formData });
+                const data = await response.json();
+                if(response.ok) {
+                    const status = document.getElementById('spec-status');
+                    status.textContent = `${data.message} (${data.count} endpoints)`;
+                    status.classList.remove('hidden');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    alert('Error: ' + data.detail);
+                }
+            } catch (err) {
+                alert('Upload failed');
+            }
+        });
+
+        document.getElementById('log-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('log-file');
+            if (fileInput.files.length === 0) return alert('Select a log file');
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/api/upload-logs', { method: 'POST', body: formData });
+                const data = await response.json();
+                if(response.ok) {
+                    const status = document.getElementById('log-status');
+                    status.textContent = `${data.message} (${data.count} entries)`;
+                    status.classList.remove('hidden');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    alert('Error: ' + data.detail);
+                }
+            } catch (err) {
+                alert('Upload failed');
+            }
+        });
+    </script>
+</body>
+</html>
