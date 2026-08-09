@@ -30,7 +30,8 @@ API_KEY = os.environ.get("API_KEY")
 if not API_KEY and os.environ.get("PYTEST_CURRENT_TEST") is None:
     raise ValueError("API_KEY environment variable is not set. Ensure secure deployment.")
 # fallback just for tests
-API_KEY = API_KEY or "default-dev-key"
+if os.environ.get("PYTEST_CURRENT_TEST") is not None and not API_KEY:
+    API_KEY = "default-dev-key"
 
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
