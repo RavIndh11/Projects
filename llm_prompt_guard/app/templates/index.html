@@ -15,6 +15,9 @@
 
         <main class="bg-white rounded-lg shadow-md p-6 mb-8">
             <h2 class="text-xl font-semibold mb-4 border-b pb-2">Analyze Prompt</h2>
+            <div id="error-message" class="hidden mb-4 p-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">
+                <span class="font-medium">Error:</span> <span id="error-text">An error occurred during analysis.</span>
+            </div>
             <form id="analyze-form" class="space-y-4">
                 <div>
                     <label for="prompt" class="block text-sm font-medium text-gray-700 mb-1">Enter Prompt Payload: <span class="text-red-500">*</span></label>
@@ -60,6 +63,9 @@
             const prompt = document.getElementById('prompt').value;
             if (!prompt) return;
 
+            const errorContainer = document.getElementById('error-message');
+            errorContainer.classList.add('hidden');
+
             const submitBtn = document.getElementById('submit-btn');
             submitBtn.disabled = true;
             submitBtn.innerHTML = `
@@ -87,7 +93,10 @@
                 displayResults(data);
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred during analysis.');
+                const errorContainer = document.getElementById('error-message');
+                document.getElementById('error-text').textContent = 'An error occurred during analysis. Please try again.';
+                errorContainer.classList.remove('hidden');
+                document.getElementById('results-section').classList.add('hidden');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Analyze Payload';

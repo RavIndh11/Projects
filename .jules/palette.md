@@ -8,3 +8,7 @@
 ## 2024-05-14 - Visual loading states on auto-refreshing UI
 **Learning:** When combining manual user actions (like a "Refresh" button) with background auto-polling in a dashboard, visual loading states (like spinners and disabled buttons) should only be triggered by the manual action. Triggering them on the auto-polling interval creates an annoying and distracting UI flicker.
 **Action:** Always check if a dashboard has a `setInterval` for fetching data before adding loading states. Pass an `isManual` flag from the button's event handler to the fetch function to selectively apply the loading UI only when the user explicitly interacts with it.
+
+## 2024-05-14 - Accessible Inline Error Messages
+**Learning:** Native `alert()` dialogs block the main thread, provide a jarring user experience, and are often poorly handled by screen readers. Furthermore, standard JavaScript `alert`s cannot be styled to match the application's design system.
+**Action:** When handling asynchronous fetch errors (like API analysis failures), always use an inline, hidden `div` with `role="alert"` and visually display it (by removing the `hidden` class) when an error occurs. Ensure this container matches the app's styling and is easily dismissible or resetting on the next action.
