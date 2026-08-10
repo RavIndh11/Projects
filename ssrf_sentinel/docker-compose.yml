@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  ssrf_sentinel:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.example
+    networks:
+      - ssrf_net
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  ssrf_net:
+    driver: bridge
