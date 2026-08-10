@@ -11,6 +11,8 @@ LOG_REGEX = re.compile(
     r'^(?P<ip>\S+) \S+ \S+ \[(?P<timestamp>[^\]]+)\] "(?P<method>\S+) (?P<path>[^"]+?) (?P<protocol>HTTP/\S+)" (?P<status>\d{3}) (?P<size>\S+)(?: "(?P<referrer>[^"]*?)" "(?P<user_agent>[^"]*?)")?'
 )
 
+ATTACK_PATTERNS_ITEMS = tuple(ATTACK_PATTERNS.items())
+
 class LogAnalyzer:
     def __init__(self):
         # We will track malicious requests by IP Address
@@ -32,15 +34,26 @@ class LogAnalyzer:
 
         # Check path, referrer, and user-agent for malicious patterns
         # Standard web attacks commonly manifest here
-        targets = [
-            fields.get('path', ''),
-            fields.get('referrer', '') or '',
-            fields.get('user_agent', '') or ''
-        ]
+        path = fields.get('path')
+        referrer = fields.get('referrer')
+        user_agent = fields.get('user_agent')
 
-        for target in targets:
-            for attack_type, pattern in ATTACK_PATTERNS.items():
-                if pattern.search(target):
+        # We process targets linearly for correctness against the previous ordering.
+        if path:
+            for attack_type, pattern in ATTACK_PATTERNS_ITEMS:
+                if pattern.search(path):
+                    self.total_attacks_detected += 1
+                    return True, attack_type, fields
+
+        if referrer:
+            for attack_type, pattern in ATTACK_PATTERNS_ITEMS:
+                if pattern.search(referrer):
+                    self.total_attacks_detected += 1
+                    return True, attack_type, fields
+
+        if user_agent:
+            for attack_type, pattern in ATTACK_PATTERNS_ITEMS:
+                if pattern.search(user_agent):
                     self.total_attacks_detected += 1
                     return True, attack_type, fields
 
