@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  ssrf_sentinel:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV=production
+    networks:
+      - ssrf_network
+    restart: unless-stopped
+
+networks:
+  ssrf_network:
+    driver: bridge
