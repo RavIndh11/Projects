@@ -12,3 +12,6 @@
 ## 2024-05-14 - Accessible Inline Error Messages
 **Learning:** Native `alert()` dialogs block the main thread, provide a jarring user experience, and are often poorly handled by screen readers. Furthermore, standard JavaScript `alert`s cannot be styled to match the application's design system.
 **Action:** When handling asynchronous fetch errors (like API analysis failures), always use an inline, hidden `div` with `role="alert"` and visually display it (by removing the `hidden` class) when an error occurs. Ensure this container matches the app's styling and is easily dismissible or resetting on the next action.
+## 2026-08-11 - Adding Loading State to HTML Form Submission Button
+**Learning:** For standalone templates without a frontend framework, an inline JavaScript snippet applied to the form's `onsubmit` handler is an effective, non-intrusive way to inject UX loading states. Specifically, altering the button text/SVG and disabling it after the submit event is dispatched avoids double submissions and provides immediate feedback.
+**Action:** Use inline JS on the form's `onsubmit` attribute in legacy or plain HTML environments for quick loading state wins without adding external scripts. Ensure to add centering utilities (like Tailwind's `inline-flex justify-center items-center`) so injected loading SVGs align properly with the text.
