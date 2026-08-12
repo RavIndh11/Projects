@@ -5,6 +5,7 @@ import sys
 import dns.resolver
 import requests
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Configure logging
 logging.basicConfig(
@@ -101,10 +102,23 @@ def main():
             sys.exit(1)
 
     results = []
-    for target in targets:
-        result = check_vulnerability(target, signatures)
-        if result:
-            results.append(result)
+
+    # ⚡ Bolt: Use ThreadPoolExecutor to run scans concurrently
+    # This significantly reduces overall execution time for large lists of targets
+    # by parallelizing the blocking network I/O operations (DNS resolution and HTTP requests).
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_target = {
+            executor.submit(check_vulnerability, target, signatures): target
+            for target in targets
+        }
+        for future in as_completed(future_to_target):
+            try:
+                result = future.result()
+                if result:
+                    results.append(result)
+            except Exception as e:
+                target = future_to_target[future]
+                logging.error(f"Error checking {target}: {e}")
 
     if args.output and results:
         try:
