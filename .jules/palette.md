@@ -12,3 +12,6 @@
 ## 2024-05-14 - Accessible Inline Error Messages
 **Learning:** Native `alert()` dialogs block the main thread, provide a jarring user experience, and are often poorly handled by screen readers. Furthermore, standard JavaScript `alert`s cannot be styled to match the application's design system.
 **Action:** When handling asynchronous fetch errors (like API analysis failures), always use an inline, hidden `div` with `role="alert"` and visually display it (by removing the `hidden` class) when an error occurs. Ensure this container matches the app's styling and is easily dismissible or resetting on the next action.
+## 2024-05-24 - File Upload Submit Feedback
+**Learning:** For forms involving synchronous file uploads that may take a noticeable amount of time, users might double-click or navigate away thinking it failed. Adding an immediate inline loading state (like a spinner and disabled button) directly on the submit element significantly reduces user error (duplicate submissions) and perceived wait time.
+**Action:** When adding file upload forms or synchronous analytical actions that block the UI, always implement an immediate visual loading state (like `onsubmit` JS to swap the button out) to disable the submit button and show a loading spinner.
