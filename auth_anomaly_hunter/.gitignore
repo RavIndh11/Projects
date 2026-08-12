@@ -1,0 +1,21 @@
+# Python virtual environments
+venv/
+.env
+__pycache__/
+*.pyc
+
+# Docker
+.dockerignore
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDEs
+.vscode/
+.idea/
+
+# Database
+*.sqlite3
+*.db
