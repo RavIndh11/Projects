@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  anomaly_engine:
+    build: .
+    container_name: auth_anomaly_hunter
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.example
+    networks:
+      - auth_network
+    restart: unless-stopped
+
+networks:
+  auth_network:
+    driver: bridge
