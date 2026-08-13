@@ -96,10 +96,14 @@ def analyze_endpoints(documented_paths: List[OpenAPIPath], logs: List[LogEntry])
     # Track which documented paths have been hit
     documented_hits = { (p.path, m): False for p in documented_paths for m in p.methods }
 
+    # ⚡ Bolt: Pre-compile regex patterns for documented paths to avoid redundant
+    # compilation inside the hot loop, significantly improving analysis speed.
+    compiled_patterns = {p.path: re.compile(p.regex_pattern) for p in documented_paths}
+
     for log in logs:
         matched = False
         for doc_path in documented_paths:
-            if re.match(doc_path.regex_pattern, log.path) and log.method in doc_path.methods:
+            if compiled_patterns[doc_path.path].match(log.path) and log.method in doc_path.methods:
                 matched = True
                 documented_hits[(doc_path.path, log.method)] = True
 
