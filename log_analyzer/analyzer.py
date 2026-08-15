@@ -39,6 +39,11 @@ class LogAnalyzer:
         ]
 
         for target in targets:
+            # ⚡ Bolt Optimization: Skip regex search for empty or placeholder ("-") fields.
+            # Reduces unnecessary regex evaluations significantly on standard logs.
+            if not target or target == "-":
+                continue
+
             for attack_type, pattern in ATTACK_PATTERNS.items():
                 if pattern.search(target):
                     self.total_attacks_detected += 1
