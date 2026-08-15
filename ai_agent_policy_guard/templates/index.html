@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Policy Guard Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add simple Alpine.js for lightweight interactions -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        .log-entry-allowed { border-left: 4px solid #10B981; }
+        .log-entry-blocked { border-left: 4px solid #EF4444; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800" x-data="dashboardData()" x-init="initData()">
+
+    <!-- Navbar -->
+    <nav class="bg-slate-800 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-shield-halved text-blue-400 text-2xl"></i>
+                    <span class="font-bold text-xl tracking-tight">AI Agent Policy Guard</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <span class="mr-2 text-sm text-gray-300">API Key:</span>
+                        <input type="password" x-model="apiKey" class="bg-slate-700 text-white px-2 py-1 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-32" placeholder="API Key">
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white">
+                        <i class="fas fa-circle text-[8px] mr-1 align-middle"></i> Active
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Left Column: Controls & Testing -->
+            <div class="lg:col-span-1 space-y-6">
+
+                <!-- Quick Test Panel -->
+                <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                    <h2 class="text-lg font-bold border-b pb-2 mb-4 flex items-center">
+                        <i class="fas fa-flask mr-2 text-purple-500"></i> Test Tool Execution
+                    </h2>
+
+                    <form @submit.prevent="testPayload" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tool Name</label>
+                            <input type="text" x-model="testForm.tool_name" required class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., shell_execute">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Agent ID</label>
+                            <input type="text" x-model="testForm.agent_id" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., test-agent-01">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Parameters (JSON)</label>
+                            <textarea x-model="testForm.parameters_json" rows="4" class="w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono focus:ring-blue-500 focus:border-blue-500" placeholder='{"command": "ls -la"}'></textarea>
+                            <p x-show="jsonError" class="text-red-500 text-xs mt-1" x-text="jsonError"></p>
+                        </div>
+
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors" :disabled="loadingTest">
+                            <span x-show="!loadingTest">Evaluate Request</span>
+                            <span x-show="loadingTest"><i class="fas fa-spinner fa-spin"></i> Evaluating...</span>
+                        </button>
+                    </form>
+
+                    <!-- Test Result Banner -->
+                    <div x-show="testResult" class="mt-4 p-4 rounded text-sm font-medium" :class="testResult && testResult.allowed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" x-cloak>
+                        <div class="flex items-center justify-between mb-1">
+                            <span x-text="testResult && testResult.allowed ? 'ALLOWED' : 'BLOCKED'" class="font-bold"></span>
+                            <span x-text="testResult && testResult.matched_rule ? 'Rule: ' + testResult.matched_rule : ''" class="text-xs opacity-75"></span>
+                        </div>
+                        <p x-text="testResult ? testResult.reason : ''" class="font-normal text-xs"></p>
+                    </div>
+                </div>
+
+                <!-- Current Policy Panel -->
+                <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                    <div class="flex justify-between items-center border-b pb-2 mb-4">
+                        <h2 class="text-lg font-bold flex items-center">
+                            <i class="fas fa-file-shield mr-2 text-blue-500"></i> Active Policy
+                        </h2>
+                        <button @click="reloadPolicy" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded transition-colors" title="Reload Policy">
+                            <i class="fas fa-sync-alt" :class="{'fa-spin': loadingPolicy}"></i>
+                        </button>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded border border-gray-200 max-h-64 overflow-y-auto">
+                        <pre class="text-xs text-gray-700 font-mono" x-text="formatPolicy(policyData)"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Live Logs -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow flex flex-col h-full border border-gray-200">
+                    <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-lg">
+                        <h2 class="text-lg font-bold flex items-center">
+                            <i class="fas fa-list-ul mr-2 text-gray-600"></i> Evaluation Logs
+                        </h2>
+                        <div class="flex items-center space-x-2 text-sm">
+                            <span class="flex items-center"><span class="w-3 h-3 bg-green-500 inline-block mr-1 rounded-full"></span> Allowed</span>
+                            <span class="flex items-center"><span class="w-3 h-3 bg-red-500 inline-block mr-1 rounded-full"></span> Blocked</span>
+                            <button @click="fetchLogs" class="ml-4 text-blue-600 hover:text-blue-800" title="Refresh Logs">
+                                <i class="fas fa-sync-alt" :class="{'fa-spin': loadingLogs}"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 p-4 overflow-y-auto max-h-[800px] bg-slate-50 space-y-3">
+                        <template x-if="logs.length === 0">
+                            <div class="text-center text-gray-500 py-10">
+                                <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                                <p>No logs available. Test a payload to see it here.</p>
+                            </div>
+                        </template>
+
+                        <template x-for="(log, index) in logs" :key="index">
+                            <div class="bg-white p-4 rounded shadow-sm text-sm"
+                                 :class="log.is_allowed ? 'log-entry-allowed' : 'log-entry-blocked'">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="font-bold text-gray-800" x-text="log.tool_name"></span>
+                                        <span class="text-xs px-2 py-0.5 rounded-full"
+                                              :class="log.is_allowed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                                              x-text="log.is_allowed ? 'ALLOWED' : 'BLOCKED'"></span>
+                                        <span class="text-xs text-gray-500" x-text="log.matched_rule ? '(' + log.matched_rule + ')' : ''"></span>
+                                    </div>
+                                    <span class="text-xs text-gray-400" x-text="formatTime(log.asctime)"></span>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                    <div>
+                                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Parameters</p>
+                                        <pre class="bg-gray-50 p-2 rounded text-xs border border-gray-100" x-text="JSON.stringify(log.parameters, null, 2)"></pre>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Details</p>
+                                        <div class="text-xs space-y-1">
+                                            <p><span class="font-medium text-gray-600">Reason:</span> <span x-text="log.reason" :class="!log.is_allowed ? 'text-red-600 font-medium' : 'text-green-600'"></span></p>
+                                            <p><span class="font-medium text-gray-600">Agent ID:</span> <span x-text="log.agent_id || 'N/A'"></span></p>
+                                            <p><span class="font-medium text-gray-600">Level:</span> <span x-text="log.levelname"></span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('dashboardData', () => ({
+                apiKey: 'dev_api_key',
+                logs: [],
+                policyData: null,
+                loadingLogs: false,
+                loadingPolicy: false,
+                loadingTest: false,
+                testResult: null,
+                jsonError: '',
+                testForm: {
+                    tool_name: 'shell_execute',
+                    agent_id: 'ui-tester',
+                    parameters_json: '{\n  "command": "ls -la"\n}'
+                },
+
+                initData() {
+                    this.fetchLogs();
+                    this.fetchPolicy();
+                    // Poll for new logs every 5 seconds
+                    setInterval(() => this.fetchLogs(), 5000);
+                },
+
+                getHeaders() {
+                    return {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': this.apiKey
+                    };
+                },
+
+                async fetchLogs() {
+                    this.loadingLogs = true;
+                    try {
+                        const response = await fetch('/api/v1/logs', { headers: this.getHeaders() });
+                        if (response.ok) {
+                            const data = await response.json();
+                            // Filter only policy_guard logs that have tool_name (our structured evaluation logs)
+                            this.logs = data.logs.filter(l => l.name === 'policy_guard' && l.tool_name !== undefined);
+                        } else if (response.status === 401) {
+                            console.warn("Unauthorized to fetch logs - check API key");
+                        }
+                    } catch (e) {
+                        console.error('Error fetching logs:', e);
+                    } finally {
+                        this.loadingLogs = false;
+                    }
+                },
+
+                async fetchPolicy() {
+                    this.loadingPolicy = true;
+                    try {
+                        const response = await fetch('/api/v1/policy', { headers: this.getHeaders() });
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.policyData = data.policy;
+                        }
+                    } catch (e) {
+                        console.error('Error fetching policy:', e);
+                    } finally {
+                        this.loadingPolicy = false;
+                    }
+                },
+
+                async reloadPolicy() {
+                    this.loadingPolicy = true;
+                    try {
+                        const response = await fetch('/api/v1/reload-policy', {
+                            method: 'POST',
+                            headers: this.getHeaders()
+                        });
+                        if (response.ok) {
+                            await this.fetchPolicy();
+                            // Toast notification could go here
+                        } else {
+                            alert("Failed to reload policy. Check API Key or server logs.");
+                        }
+                    } catch (e) {
+                        console.error('Error reloading policy:', e);
+                    } finally {
+                        this.loadingPolicy = false;
+                    }
+                },
+
+                async testPayload() {
+                    this.jsonError = '';
+                    let parameters = {};
+
+                    try {
+                        if (this.testForm.parameters_json.trim()) {
+                            parameters = JSON.parse(this.testForm.parameters_json);
+                        }
+                    } catch (e) {
+                        this.jsonError = 'Invalid JSON in parameters field';
+                        return;
+                    }
+
+                    this.loadingTest = true;
+                    this.testResult = null;
+
+                    const payload = {
+                        tool_name: this.testForm.tool_name,
+                        agent_id: this.testForm.agent_id,
+                        parameters: parameters,
+                        reasoning: "Manual UI test"
+                    };
+
+                    try {
+                        const response = await fetch('/api/v1/evaluate', {
+                            method: 'POST',
+                            headers: this.getHeaders(),
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (response.ok) {
+                            this.testResult = await response.json();
+                            this.fetchLogs(); // Refresh logs immediately
+                        } else {
+                            const errData = await response.json();
+                            alert("Error: " + (errData.detail || response.statusText));
+                        }
+                    } catch (e) {
+                        console.error('Error testing payload:', e);
+                        alert("Network error occurred");
+                    } finally {
+                        this.loadingTest = false;
+                    }
+                },
+
+                formatPolicy(obj) {
+                    if (!obj) return "No policy loaded";
+                    return JSON.stringify(obj, null, 2);
+                },
+
+                formatTime(timeStr) {
+                    if (!timeStr) return '';
+                    try {
+                        // Assuming string format from python jsonlogger like "2023-10-25 12:34:56,789"
+                        const cleanTime = timeStr.split(',')[0];
+                        return cleanTime;
+                    } catch (e) {
+                        return timeStr;
+                    }
+                }
+            }));
+        });
+    </script>
+</body>
+</html>

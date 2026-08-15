@@ -1,0 +1,86 @@
+# AI Agent Tool Execution Policy
+# This file defines what tools the AI agent can execute and under what conditions.
+
+# default_action can be "allow" or "deny"
+default_action: deny
+
+tools:
+  # Shell command execution
+  shell_execute:
+    action: allow
+    rules:
+      - name: restrict_commands
+        parameter: command
+        match_type: regex
+        # Only allow safe read-only commands
+        pattern: "^(ls|cat|echo|pwd|whoami|date) .*$"
+        required: true
+      - name: prevent_chained_commands
+        parameter: command
+        match_type: regex_deny
+        # Deny commands containing ||, &&, ;, |, >, <
+        pattern: "(\\|\\||&&|;|\\||>|<)"
+        required: true
+
+  # File reading operations
+  read_file:
+    action: allow
+    rules:
+      - name: prevent_path_traversal
+        parameter: filepath
+        match_type: regex_deny
+        # Deny paths trying to go up directories
+        pattern: "\\.\\./"
+        required: true
+      - name: restrict_to_app_directory
+        parameter: filepath
+        match_type: regex
+        # Only allow reading files within /app or /var/log
+        pattern: "^(/app/|/var/log/|\\./).*$"
+        required: true
+      - name: deny_sensitive_files
+        parameter: filepath
+        match_type: regex_deny
+        # Deny access to known sensitive files
+        pattern: "(/etc/shadow|/etc/passwd|\\.ssh/|\\.aws/|\\.env)"
+        required: true
+
+  # Database operations
+  execute_sql:
+    action: allow
+    rules:
+      - name: read_only_queries
+        parameter: query
+        match_type: regex
+        # Only allow SELECT queries
+        pattern: "^(?i)\\s*SELECT\\s+.*$"
+        required: true
+      - name: restrict_tables
+        parameter: query
+        match_type: regex_deny
+        # Deny queries touching sensitive tables
+        pattern: "(?i)(users_passwords|payment_methods|secrets)"
+        required: false
+
+  # External HTTP requests
+  http_request:
+    action: allow
+    rules:
+      - name: allowed_methods
+        parameter: method
+        match_type: exact
+        # Only allow GET and POST requests
+        allowed_values:
+          - "GET"
+          - "POST"
+        required: true
+      - name: restrict_domains
+        parameter: url
+        match_type: regex
+        # Only allow requests to specific domains
+        pattern: "^https://(api\\.github\\.com|jsonplaceholder\\.typicode\\.com)/.*$"
+        required: true
+
+  # Network scanning (Example of a tool explicitly denied)
+  nmap_scan:
+    action: deny
