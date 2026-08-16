@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Policy Guard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 border-b pb-2">AI Agent Policy Guard - Dashboard</h1>
+            <p class="text-gray-600 mt-2">Real-time monitoring of AI Agent tool execution requests.</p>
+        </header>
+
+        <!-- Stats row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6 border-t-4 border-blue-500">
+                <h3 class="text-gray-500 text-sm font-semibold uppercase tracking-wider">Total Evaluations</h3>
+                <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.total }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 border-t-4 border-green-500">
+                <h3 class="text-gray-500 text-sm font-semibold uppercase tracking-wider">Allowed Executions</h3>
+                <p class="text-3xl font-bold text-green-600 mt-2">{{ stats.allowed }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 border-t-4 border-red-500">
+                <h3 class="text-gray-500 text-sm font-semibold uppercase tracking-wider">Denied Executions</h3>
+                <p class="text-3xl font-bold text-red-600 mt-2">{{ stats.denied }}</p>
+            </div>
+        </div>
+
+        <!-- Logs Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-800">Recent Evaluations</h2>
+                <span class="text-sm text-gray-500">Showing last 100 requests</span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agent ID</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tool</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason / Match</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for eval in evaluations %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ eval.timestamp[:19] | replace("T", " ") }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="font-mono text-sm text-blue-700 bg-blue-50 px-2 py-1 rounded">{{ eval.agent_id }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="font-medium text-gray-900">{{ eval.tool_name }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if eval.allowed %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Allowed
+                                </span>
+                                {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    Denied
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                <div class="font-medium text-gray-900">{{ eval.reason }}</div>
+                                <div class="text-xs text-gray-400 mt-1">Rule: {{ eval.matched_rule }}</div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                No evaluations recorded yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
