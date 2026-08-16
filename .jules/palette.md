@@ -12,3 +12,7 @@
 ## 2024-05-14 - Accessible Inline Error Messages
 **Learning:** Native `alert()` dialogs block the main thread, provide a jarring user experience, and are often poorly handled by screen readers. Furthermore, standard JavaScript `alert`s cannot be styled to match the application's design system.
 **Action:** When handling asynchronous fetch errors (like API analysis failures), always use an inline, hidden `div` with `role="alert"` and visually display it (by removing the `hidden` class) when an error occurs. Ensure this container matches the app's styling and is easily dismissible or resetting on the next action.
+
+## 2024-05-14 - Empty States and Loading Spinners on Synchronous Forms
+**Learning:** Adding empty states to pages waiting for file uploads is critical to prevent the page from looking unfinished or blank. Furthermore, inline JavaScript `onsubmit` handlers are an effective way to disable submit buttons and show loading spinners for simple server-rendered forms without requiring an external JavaScript file.
+**Action:** Always include empty states for sections depending on user data. For synchronous form submissions, use an `onsubmit` handler to disable the button and show a loading spinner to prevent double submissions and provide immediate feedback.
