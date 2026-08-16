@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  policy_guard:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./policies:/app/policies:ro
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - guard_network
+
+networks:
+  guard_network:
+    driver: bridge
