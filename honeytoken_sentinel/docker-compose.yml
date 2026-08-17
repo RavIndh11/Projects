@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  honeytoken_sentinel:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - data_volume:/app/data
+    env_file:
+      - .env.example
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+
+volumes:
+  data_volume:
+
+networks:
+  backend:
+    driver: bridge
