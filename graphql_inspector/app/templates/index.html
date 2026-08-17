@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphQL Inspector - Security Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">GraphQL Inspector</h1>
+            <p class="text-gray-600">Scan GraphQL endpoints for enabled introspection and sensitive data leaks.</p>
+        </header>
+
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <form action="/" method="POST" class="flex flex-col md:flex-row gap-4">
+                <input type="url" name="url" placeholder="https://api.example.com/graphql" required
+                       class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       value="{{ report.url if report else '' }}">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition duration-200">
+                    Scan Endpoint
+                </button>
+            </form>
+        </div>
+
+        {% if report %}
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-gray-50 border-b border-gray-200 p-4 flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-gray-800">Scan Results</h2>
+
+                {% if report.introspection_enabled %}
+                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                        Introspection Enabled
+                    </span>
+                {% else %}
+                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        Introspection Disabled / Safe
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="p-6">
+                <div class="mb-4">
+                    <p class="text-gray-700"><strong>Target URL:</strong> {{ report.url }}</p>
+                    {% if report.error_message %}
+                        <p class="text-red-600 mt-2"><strong>Status/Error:</strong> {{ report.error_message }}</p>
+                    {% endif %}
+                    {% if report.introspection_enabled %}
+                        <p class="text-gray-700 mt-2"><strong>Total Types Found:</strong> {{ report.total_types }}</p>
+                    {% endif %}
+                </div>
+
+                {% if report.introspection_enabled %}
+                    <h3 class="text-lg font-semibold text-gray-800 mt-6 mb-3 border-b pb-2">Sensitive Fields Detected ({{ report.sensitive_fields|length }})</h3>
+
+                    {% if report.sensitive_fields %}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Field Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for field in report.sensitive_fields %}
+                                    <tr class="hover:bg-red-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">{{ field.type_name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-600 font-mono">{{ field.field_name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ field.reason }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-green-600 bg-green-50 p-4 rounded-md border border-green-200">No overtly sensitive field names were detected in the schema. (Manual review is still recommended).</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
