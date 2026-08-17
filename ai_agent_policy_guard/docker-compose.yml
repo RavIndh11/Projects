@@ -1,0 +1,21 @@
+services:
+  policy_guard:
+    build: .
+    container_name: ai_agent_policy_guard
+    ports:
+      - "8000:8000"
+    environment:
+      - API_KEY=${API_KEY:-dev_api_key}
+      - POLICY_PATH=/app/policies/default.yaml
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./policies:/app/policies:ro
+    networks:
+      - policy_guard_net
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  policy_guard_net:
+    driver: bridge
