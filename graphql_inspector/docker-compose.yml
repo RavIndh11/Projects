@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  graphql_inspector:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - LOG_LEVEL=INFO
+    networks:
+      - internal_network
+    restart: unless-stopped
+
+networks:
+  internal_network:
+    driver: bridge

@@ -1,0 +1,9 @@
+fastapi==0.104.1
+uvicorn==0.24.0.post1
+pydantic==2.5.2
+python-multipart==0.0.6
+jinja2==3.1.2
+httpx==0.25.2
+python-json-logger==2.0.7
+pytest==7.4.3
+pytest-asyncio==0.23.2
