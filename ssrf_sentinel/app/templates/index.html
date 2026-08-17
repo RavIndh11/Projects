@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSRF Sentinel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl">
+        <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">SSRF Sentinel</h1>
+
+        <form id="fetchForm" class="mb-6">
+            <div class="flex flex-col mb-4">
+                <label for="url" class="mb-2 font-semibold text-gray-700">Enter URL to Fetch:</label>
+                <input type="text" id="url" name="url" placeholder="https://example.com" required
+                       class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition duration-300">
+                Safely Fetch URL
+            </button>
+        </form>
+
+        <div id="resultContainer" class="hidden">
+            <h2 class="text-xl font-semibold mb-2 text-gray-800">Result:</h2>
+            <div id="statusBadge" class="inline-block px-3 py-1 rounded-full text-sm font-semibold mb-4"></div>
+            <pre id="output" class="bg-gray-50 border border-gray-200 rounded-md p-4 overflow-x-auto text-sm text-gray-700 max-h-64 overflow-y-auto"></pre>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('fetchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const urlInput = document.getElementById('url').value;
+            const resultContainer = document.getElementById('resultContainer');
+            const statusBadge = document.getElementById('statusBadge');
+            const output = document.getElementById('output');
+
+            resultContainer.classList.remove('hidden');
+            statusBadge.textContent = 'Fetching...';
+            statusBadge.className = 'inline-block px-3 py-1 rounded-full text-sm font-semibold mb-4 bg-yellow-200 text-yellow-800';
+            output.textContent = 'Please wait...';
+
+            try {
+                const formData = new FormData();
+                formData.append('url', urlInput);
+
+                const response = await fetch('/api/fetch', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    statusBadge.textContent = 'Safe - Fetched Successfully';
+                    statusBadge.className = 'inline-block px-3 py-1 rounded-full text-sm font-semibold mb-4 bg-green-200 text-green-800';
+                    output.textContent = data.content_preview;
+                } else {
+                    statusBadge.textContent = 'Blocked - Security Violation';
+                    statusBadge.className = 'inline-block px-3 py-1 rounded-full text-sm font-semibold mb-4 bg-red-200 text-red-800';
+                    output.textContent = data.message;
+                }
+            } catch (error) {
+                statusBadge.textContent = 'Error';
+                statusBadge.className = 'inline-block px-3 py-1 rounded-full text-sm font-semibold mb-4 bg-red-200 text-red-800';
+                output.textContent = 'An error occurred while fetching the URL.';
+            }
+        });
+    </script>
+</body>
+</html>
