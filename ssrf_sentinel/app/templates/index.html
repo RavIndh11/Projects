@@ -12,16 +12,16 @@
 
         <form id="fetchForm" class="mb-6">
             <div class="flex flex-col mb-4">
-                <label for="url" class="mb-2 font-semibold text-gray-700">Enter URL to Fetch:</label>
-                <input type="text" id="url" name="url" placeholder="https://example.com" required
+                <label for="url" class="mb-2 font-semibold text-gray-700">Enter URL to Fetch: <span class="text-red-500">*</span></label>
+                <input type="text" id="url" name="url" placeholder="https://example.com" required aria-required="true"
                        class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
-            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition duration-300">
-                Safely Fetch URL
+            <button id="submitBtn" type="submit" class="w-full flex justify-center items-center bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition duration-300 disabled:opacity-75 disabled:cursor-not-allowed">
+                <span>Safely Fetch URL</span>
             </button>
         </form>
 
-        <div id="resultContainer" class="hidden">
+        <div id="resultContainer" class="hidden" aria-live="polite">
             <h2 class="text-xl font-semibold mb-2 text-gray-800">Result:</h2>
             <div id="statusBadge" class="inline-block px-3 py-1 rounded-full text-sm font-semibold mb-4"></div>
             <pre id="output" class="bg-gray-50 border border-gray-200 rounded-md p-4 overflow-x-auto text-sm text-gray-700 max-h-64 overflow-y-auto"></pre>
@@ -35,11 +35,21 @@
             const resultContainer = document.getElementById('resultContainer');
             const statusBadge = document.getElementById('statusBadge');
             const output = document.getElementById('output');
+            const submitBtn = document.getElementById('submitBtn');
 
             resultContainer.classList.remove('hidden');
             statusBadge.textContent = 'Fetching...';
             statusBadge.className = 'inline-block px-3 py-1 rounded-full text-sm font-semibold mb-4 bg-yellow-200 text-yellow-800';
             output.textContent = 'Please wait...';
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Fetching...</span>
+            `;
 
             try {
                 const formData = new FormData();
@@ -65,6 +75,9 @@
                 statusBadge.textContent = 'Error';
                 statusBadge.className = 'inline-block px-3 py-1 rounded-full text-sm font-semibold mb-4 bg-red-200 text-red-800';
                 output.textContent = 'An error occurred while fetching the URL.';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<span>Safely Fetch URL</span>`;
             }
         });
     </script>
