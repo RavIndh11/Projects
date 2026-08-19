@@ -13,10 +13,16 @@ from .policy_engine import PolicyEngine
 from .logger import logger, get_recent_logs, clear_logs
 
 policy_engine = None
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 def get_api_key():
-    return os.getenv("API_KEY", "dev_api_key")
+    api_key = os.environ.get("API_KEY")
+    if not api_key and os.environ.get("PYTEST_CURRENT_TEST") is None:
+        raise ValueError("API_KEY environment variable is not set. Ensure secure deployment.")
+    if not api_key:
+        return "dev_api_key"
+    return api_key
+
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 def verify_api_key(api_key: str = Depends(api_key_header)):
     if not api_key:
