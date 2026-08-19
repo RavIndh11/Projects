@@ -6,3 +6,6 @@
 **Learning:** In heavily executed log parsing loops (like standard access logs), constructing temporary lists and calling `dict.items()` inside the loop introduces significant overhead. Replacing `targets = [a, b, c]` and `for k, v in PATTERNS.items()` with a pre-calculated class-level tuple and explicitly ordered sequential evaluations avoids thousands of small, unnecessary allocations and yields a 10%+ performance boost.
 
 **Action:** Whenever iterating over dicts or building transient lists within hot paths (especially >10k iterations), hoist transformations to the module or class level and flatten nested loops to explicit conditional blocks if small enough.
+## 2025-02-28 - Regex Parsing Overhead in Hot Loops
+**Learning:** Recompiling regex on-the-fly (`re.match(pattern_string, ...)`) or performing list membership checks (`item in list`) inside heavily executed nested loops (like cross-referencing thousands of logs against hundreds of patterns) can cause significant overhead.
+**Action:** When performing regex matching against a large number of inputs inside a loop, pre-compile the regex objects outside the loop with `re.compile()`. Similarly, convert lists to sets outside the loop when doing repeated membership checks.
