@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  mfa_fatigue_hunter:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - TIME_WINDOW_SECONDS=300
+      - SPAM_THRESHOLD=5
+    env_file:
+      - .env
+    networks:
+      - security_net
+    restart: unless-stopped
+
+networks:
+  security_net:
+    driver: bridge
