@@ -5,3 +5,4 @@ __pycache__/
 .pytest_cache/
 py_sast/venv/
 py_sast/**/__pycache__/
+venv/
