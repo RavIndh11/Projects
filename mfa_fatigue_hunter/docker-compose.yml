@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  mfa-fatigue-hunter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mfa-fatigue-hunter
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - security-net
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+
+networks:
+  security-net:
+    driver: bridge

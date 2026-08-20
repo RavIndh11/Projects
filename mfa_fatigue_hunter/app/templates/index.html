@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFA Fatigue Hunter Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal h-screen flex flex-col">
+    <nav class="bg-gray-800 p-4 shadow-md">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="text-white text-xl font-bold">
+                🛡️ MFA Fatigue Hunter SOC Dashboard
+            </div>
+            <div class="text-gray-300 text-sm">
+                Real-time Identity Threat Detection
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto flex-grow p-6">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-800">Recent Alerts</h2>
+
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <table class="min-w-full leading-normal">
+                <thead>
+                    <tr>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Timestamp
+                        </th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            User Email
+                        </th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Severity
+                        </th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Description
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if not alerts %}
+                    <tr>
+                        <td colspan="4" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center text-gray-500">
+                            No active alerts. The perimeter is secure.
+                        </td>
+                    </tr>
+                    {% endif %}
+
+                    {% for alert in alerts %}
+                    <tr>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">{{ alert.time_formatted }}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap font-medium">{{ alert.user_email }}</p>
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            {% if alert.severity == 'Critical' %}
+                                <span class="relative inline-block px-3 py-1 font-semibold text-red-900 leading-tight">
+                                    <span aria-hidden class="absolute inset-0 bg-red-200 opacity-50 rounded-full"></span>
+                                    <span class="relative">Critical</span>
+                                </span>
+                            {% elif alert.severity == 'High' %}
+                                <span class="relative inline-block px-3 py-1 font-semibold text-orange-900 leading-tight">
+                                    <span aria-hidden class="absolute inset-0 bg-orange-200 opacity-50 rounded-full"></span>
+                                    <span class="relative">High</span>
+                                </span>
+                            {% elif alert.severity == 'Medium' %}
+                                <span class="relative inline-block px-3 py-1 font-semibold text-yellow-900 leading-tight">
+                                    <span aria-hidden class="absolute inset-0 bg-yellow-200 opacity-50 rounded-full"></span>
+                                    <span class="relative">Medium</span>
+                                </span>
+                            {% else %}
+                                <span class="relative inline-block px-3 py-1 font-semibold text-green-900 leading-tight">
+                                    <span aria-hidden class="absolute inset-0 bg-green-200 opacity-50 rounded-full"></span>
+                                    <span class="relative">Low</span>
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                            <p class="text-gray-900 whitespace-no-wrap">{{ alert.description }}</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer class="bg-gray-200 text-center py-4 text-sm text-gray-600">
+        MFA Fatigue Hunter - Automated Detection of MFA Prompt Bombing Attacks
+    </footer>
+
+    <script>
+        // Auto-refresh the dashboard every 15 seconds
+        setTimeout(function(){
+           window.location.reload(1);
+        }, 15000);
+    </script>
+</body>
+</html>
