@@ -16,3 +16,6 @@
 
 **Learning:** When modifying forms, especially those that trigger long-running analysis tasks, it's critical to add immediate visual feedback (like a loading spinner and disabled state on the submit button). This prevents duplicate submissions and reduces user anxiety. Additionally, explicit indicators like red asterisks must be paired with `aria-required="true"` on the input element to ensure both visual and screen reader users understand the field is mandatory.
 **Action:** Next time I modify a form, I will ensure it has a robust loading state and that all required fields are clearly marked visually and semantically.
+## 2024-05-14 - Keyboard Shortcuts & Badge Contrast in Power-User Forms
+**Learning:** For repetitive SOC/analysis tasks, forms with large textareas benefit hugely from a `Ctrl+Enter` submit shortcut, bypassing the need to use a mouse. Also, mid-tone background colors (like Tailwind's `bg-yellow-500` and `bg-green-500`) often fail WCAG contrast ratios when paired with white text, making threat badges hard to read.
+**Action:** Always consider `Ctrl+Enter` shortcuts for textareas in dashboard tools. Default to lighter backgrounds with darker text borders (e.g., `bg-red-100 text-red-800 border-red-200`) for status badges to guarantee contrast accessibility.
