@@ -16,3 +16,6 @@
 
 **Learning:** When modifying forms, especially those that trigger long-running analysis tasks, it's critical to add immediate visual feedback (like a loading spinner and disabled state on the submit button). This prevents duplicate submissions and reduces user anxiety. Additionally, explicit indicators like red asterisks must be paired with `aria-required="true"` on the input element to ensure both visual and screen reader users understand the field is mandatory.
 **Action:** Next time I modify a form, I will ensure it has a robust loading state and that all required fields are clearly marked visually and semantically.
+## 2024-10-24 - Missing accessibility for icon-only utility buttons
+**Learning:** Icon-only utility buttons (e.g. reload, refresh) often lack `aria-label`s and proper keyboard focus visible styles when they use icons directly (e.g. FontAwesome). Users navigating via screen readers or keyboards are unable to interact with them effectively.
+**Action:** When reviewing UI dashboards, always look for utility actions disguised as icons and explicitly verify `aria-label` attributes and `:focus-visible` / `focus:ring` classes exist.
