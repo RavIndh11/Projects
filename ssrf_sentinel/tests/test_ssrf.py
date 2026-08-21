@@ -20,6 +20,10 @@ class TestSSRF:
         # Cloud metadata
         assert URLValidator.is_safe_ip("169.254.169.254") is False
 
+        # IPv4-mapped IPv6 addresses bypass checks
+        assert URLValidator.is_safe_ip("::ffff:127.0.0.1") is False
+        assert URLValidator.is_safe_ip("::ffff:169.254.169.254") is False
+
     @patch('socket.getaddrinfo')
     def test_resolve_hostname_success(self, mock_getaddrinfo):
         # Mocking a successful resolution for example.com to an IP

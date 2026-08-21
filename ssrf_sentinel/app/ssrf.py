@@ -31,6 +31,8 @@ class URLValidator:
     def is_safe_ip(cls, ip_str: str) -> bool:
         try:
             ip = ipaddress.ip_address(ip_str)
+            if ip.version == 6 and ip.ipv4_mapped:
+                ip = ip.ipv4_mapped
             for network in cls.BLOCKED_NETWORKS:
                 if ip in network:
                     return False
