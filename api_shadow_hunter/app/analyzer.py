@@ -11,7 +11,7 @@ from app.schemas import (
 )
 
 def _convert_path_to_regex(path: str) -> str:
-    """
+    r"""
     Converts an OpenAPI path like /api/v1.0/users/{id} to a regex pattern like ^/api/v1\.0/users/[^/]+$
     """
     # First, escape regex special characters (except {} which we process next)
@@ -96,10 +96,13 @@ def analyze_endpoints(documented_paths: List[OpenAPIPath], logs: List[LogEntry])
     # Track which documented paths have been hit
     documented_hits = { (p.path, m): False for p in documented_paths for m in p.methods }
 
+    # ⚡ Bolt: Pre-compile regular expressions before the loop to avoid redundant compilation during log iteration.
+    compiled_paths = [(re.compile(p.regex_pattern), p) for p in documented_paths]
+
     for log in logs:
         matched = False
-        for doc_path in documented_paths:
-            if re.match(doc_path.regex_pattern, log.path) and log.method in doc_path.methods:
+        for compiled_re, doc_path in compiled_paths:
+            if log.method in doc_path.methods and compiled_re.match(log.path):
                 matched = True
                 documented_hits[(doc_path.path, log.method)] = True
 
