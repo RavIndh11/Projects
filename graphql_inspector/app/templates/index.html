@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphQL Inspector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .severity-low { background-color: #10B981; color: white; }
+        .severity-medium { background-color: #F59E0B; color: white; }
+        .severity-high { background-color: #EF4444; color: white; }
+        .severity-critical { background-color: #991B1B; color: white; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800 font-sans">
+    <div class="max-w-4xl mx-auto py-10 px-4">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="bg-indigo-600 px-6 py-4">
+                <h1 class="text-2xl font-bold text-white flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    GraphQL Inspector
+                </h1>
+                <p class="text-indigo-100 text-sm mt-1">Discover exposed GraphQL introspection and sensitive schema fields.</p>
+            </div>
+
+            <div class="p-6">
+                <form id="analyze-form" class="space-y-4">
+                    <div>
+                        <label for="url" class="block text-sm font-medium text-gray-700">Target GraphQL Endpoint URL</label>
+                        <div class="mt-1 flex rounded-md shadow-sm">
+                            <input type="url" name="url" id="url" required class="flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300 p-2 border" placeholder="https://api.example.com/graphql">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="headers" class="block text-sm font-medium text-gray-700">Custom Headers (JSON format - Optional)</label>
+                        <div class="mt-1">
+                            <textarea id="headers" name="headers" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border" placeholder='{"Authorization": "Bearer token123"}'></textarea>
+                        </div>
+                    </div>
+                    <div>
+                        <button type="submit" id="submit-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Analyze Endpoint
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="loading" class="hidden mt-6 text-center">
+            <svg class="animate-spin h-8 w-8 text-indigo-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-2 text-gray-600">Analyzing schema...</p>
+        </div>
+
+        <div id="results" class="hidden mt-6 bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                <h2 class="text-lg font-medium text-gray-900">Analysis Results</h2>
+                <span id="severity-badge" class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full"></span>
+            </div>
+
+            <div class="p-6">
+                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                    <div class="sm:col-span-2">
+                        <dt class="text-sm font-medium text-gray-500">Introspection Status</dt>
+                        <dd id="introspection-status" class="mt-1 text-sm text-gray-900"></dd>
+                    </div>
+
+                    <div class="sm:col-span-2 hidden" id="error-container">
+                         <dt class="text-sm font-medium text-red-500">Error</dt>
+                         <dd id="error-message" class="mt-1 text-sm text-red-700 bg-red-50 p-3 rounded-md"></dd>
+                    </div>
+
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Sensitive Fields Detected <span id="fields-count" class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">0</span></dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            <ul id="sensitive-fields-list" class="border border-gray-200 rounded-md divide-y divide-gray-200 max-h-60 overflow-y-auto">
+                            </ul>
+                        </dd>
+                    </div>
+
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">Mutations Discovered <span id="mutations-count" class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">0</span></dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            <ul id="mutations-list" class="border border-gray-200 rounded-md divide-y divide-gray-200 max-h-60 overflow-y-auto">
+                            </ul>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('analyze-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const url = document.getElementById('url').value;
+            const headersStr = document.getElementById('headers').value;
+            let headers = {};
+
+            if (headersStr) {
+                try {
+                    headers = JSON.parse(headersStr);
+                } catch (error) {
+                    alert('Invalid JSON in headers field');
+                    return;
+                }
+            }
+
+            const submitBtn = document.getElementById('submit-btn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+
+            submitBtn.disabled = true;
+            loading.classList.remove('hidden');
+            results.classList.add('hidden');
+            document.getElementById('error-container').classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url, headers })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to analyze endpoint');
+                }
+
+                // Update UI with results
+                const badge = document.getElementById('severity-badge');
+                badge.textContent = data.severity;
+                badge.className = `px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full severity-${data.severity.toLowerCase()}`;
+
+                const statusEl = document.getElementById('introspection-status');
+                if (data.introspection_enabled) {
+                    statusEl.innerHTML = '<span class="text-red-600 font-bold">Enabled</span> (Schema exposed)';
+                } else {
+                    statusEl.innerHTML = '<span class="text-green-600 font-bold">Disabled</span> or Not Accessible';
+                }
+
+                if (data.error) {
+                    document.getElementById('error-container').classList.remove('hidden');
+                    document.getElementById('error-message').textContent = data.error;
+                }
+
+                // Fields
+                const fieldsList = document.getElementById('sensitive-fields-list');
+                fieldsList.innerHTML = '';
+                document.getElementById('fields-count').textContent = data.sensitive_fields ? data.sensitive_fields.length : 0;
+
+                if (data.sensitive_fields && data.sensitive_fields.length > 0) {
+                    data.sensitive_fields.forEach(field => {
+                        const li = document.createElement('li');
+                        li.className = 'pl-3 pr-4 py-2 text-sm text-red-600 flex items-center justify-between';
+                        li.textContent = field;
+                        fieldsList.appendChild(li);
+                    });
+                } else {
+                    const li = document.createElement('li');
+                    li.className = 'pl-3 pr-4 py-3 text-sm text-gray-500 text-center';
+                    li.textContent = 'No sensitive fields detected';
+                    fieldsList.appendChild(li);
+                }
+
+                // Mutations
+                const mutationsList = document.getElementById('mutations-list');
+                mutationsList.innerHTML = '';
+                document.getElementById('mutations-count').textContent = data.mutations ? data.mutations.length : 0;
+
+                if (data.mutations && data.mutations.length > 0) {
+                    data.mutations.forEach(mut => {
+                        const li = document.createElement('li');
+                        li.className = 'pl-3 pr-4 py-2 text-sm text-yellow-600 flex items-center justify-between';
+                        li.textContent = mut;
+                        mutationsList.appendChild(li);
+                    });
+                } else {
+                    const li = document.createElement('li');
+                    li.className = 'pl-3 pr-4 py-3 text-sm text-gray-500 text-center';
+                    li.textContent = 'No mutations discovered';
+                    mutationsList.appendChild(li);
+                }
+
+                results.classList.remove('hidden');
+
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            } finally {
+                submitBtn.disabled = false;
+                loading.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
