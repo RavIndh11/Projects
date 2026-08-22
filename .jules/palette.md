@@ -16,3 +16,6 @@
 
 **Learning:** When modifying forms, especially those that trigger long-running analysis tasks, it's critical to add immediate visual feedback (like a loading spinner and disabled state on the submit button). This prevents duplicate submissions and reduces user anxiety. Additionally, explicit indicators like red asterisks must be paired with `aria-required="true"` on the input element to ensure both visual and screen reader users understand the field is mandatory.
 **Action:** Next time I modify a form, I will ensure it has a robust loading state and that all required fields are clearly marked visually and semantically.
+## 2024-10-27 - Icon-only buttons lacking ARIA labels
+**Learning:** Found instances where buttons contained only FontAwesome icons without any visible text or aria-labels in the `ai_agent_policy_guard` dashboard. This pattern (using an icon via a class for visual representation but missing the semantic accessibility label) is a common accessibility trap in SOC dashboards built with Tailwind and FontAwesome.
+**Action:** When auditing dashboards for accessibility, proactively search for `<button>` elements containing only `<i>` tags and ensure they have `aria-label` attributes to provide context to screen reader users.

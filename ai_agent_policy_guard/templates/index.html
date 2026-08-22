@@ -90,7 +90,7 @@
                         <h2 class="text-lg font-bold flex items-center">
                             <i class="fas fa-file-shield mr-2 text-blue-500"></i> Active Policy
                         </h2>
-                        <button @click="reloadPolicy" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded transition-colors" title="Reload Policy">
+                        <button @click="reloadPolicy" aria-label="Reload Policy" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded transition-colors" title="Reload Policy">
                             <i class="fas fa-sync-alt" :class="{'fa-spin': loadingPolicy}"></i>
                         </button>
                     </div>
@@ -110,7 +110,7 @@
                         <div class="flex items-center space-x-2 text-sm">
                             <span class="flex items-center"><span class="w-3 h-3 bg-green-500 inline-block mr-1 rounded-full"></span> Allowed</span>
                             <span class="flex items-center"><span class="w-3 h-3 bg-red-500 inline-block mr-1 rounded-full"></span> Blocked</span>
-                            <button @click="fetchLogs" class="ml-4 text-blue-600 hover:text-blue-800" title="Refresh Logs">
+                            <button @click="fetchLogs" aria-label="Refresh Logs" class="ml-4 text-blue-600 hover:text-blue-800" title="Refresh Logs">
                                 <i class="fas fa-sync-alt" :class="{'fa-spin': loadingLogs}"></i>
                             </button>
                         </div>
