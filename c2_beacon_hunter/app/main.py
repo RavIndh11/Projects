@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 import os
 import logging
+import secrets
 from pythonjsonlogger import jsonlogger
 from typing import List
 
@@ -42,7 +43,7 @@ analyzer = BeaconAnalyzer()
 latest_alerts: List[BeaconAlert] = []
 
 async def get_api_key(api_key_header: str = Security(api_key_header)):
-    if api_key_header == API_KEY:
+    if api_key_header and secrets.compare_digest(api_key_header, API_KEY):
         return api_key_header
     raise HTTPException(status_code=403, detail="Could not validate credentials")
 
