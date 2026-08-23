@@ -96,25 +96,53 @@ def analyze_endpoints(documented_paths: List[OpenAPIPath], logs: List[LogEntry])
     # Track which documented paths have been hit
     documented_hits = { (p.path, m): False for p in documented_paths for m in p.methods }
 
-    for log in logs:
-        matched = False
-        for doc_path in documented_paths:
-            if re.match(doc_path.regex_pattern, log.path) and log.method in doc_path.methods:
-                matched = True
-                documented_hits[(doc_path.path, log.method)] = True
+    # Pre-compile regexes and group by HTTP method to narrow search space
+    compiled_regexes = {}
+    for p in documented_paths:
+        compiled = re.compile(p.regex_pattern)
+        for m in p.methods:
+            if m not in compiled_regexes:
+                compiled_regexes[m] = []
+            compiled_regexes[m].append((compiled, p.path))
 
-                key = (log.method, doc_path.path)
+    # Memoize matched paths for O(1) lookups on repeated identical requests
+    match_cache = {}
+
+    for log in logs:
+        cache_key = (log.method, log.path)
+
+        if cache_key in match_cache:
+            doc_path, category = match_cache[cache_key]
+            if category == EndpointCategory.DOCUMENTED:
+                documented_hits[(doc_path, log.method)] = True
+                key = (log.method, doc_path)
+                endpoint_stats[key].access_count += 1
+            else:
+                key = (log.method, log.path)
+                endpoint_stats[key].access_count += 1
+            continue
+
+        matched = False
+        possible_paths = compiled_regexes.get(log.method, [])
+        for compiled_pattern, doc_path in possible_paths:
+            if compiled_pattern.match(log.path):
+                matched = True
+                documented_hits[(doc_path, log.method)] = True
+                match_cache[cache_key] = (doc_path, EndpointCategory.DOCUMENTED)
+
+                key = (log.method, doc_path)
                 if key not in endpoint_stats:
                     endpoint_stats[key] = AnalyzedEndpoint(
                         method=log.method,
-                        path=doc_path.path,
+                        path=doc_path,
                         category=EndpointCategory.DOCUMENTED,
-                        matched_documented_path=doc_path.path
+                        matched_documented_path=doc_path
                     )
                 endpoint_stats[key].access_count += 1
                 break
 
         if not matched:
+            match_cache[cache_key] = (None, EndpointCategory.SHADOW)
             # Shadow API
             key = (log.method, log.path)
             if key not in endpoint_stats:
