@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  mfa_fatigue_hunter:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - LOG_LEVEL=INFO
+    env_file:
+      - .env
+    networks:
+      - security_net
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: false # Set to true if the app writes no state, or add volume for state
+
+networks:
+  security_net:
+    driver: bridge
