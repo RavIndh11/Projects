@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+python-multipart
+jinja2
+httpx
+python-json-logger
+pytest
+pytest-asyncio
+pytest-mock
