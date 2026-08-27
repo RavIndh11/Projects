@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphQL Inspector Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="px-4 py-6 sm:px-0">
+            <h1 class="text-3xl font-bold text-gray-900 mb-6">GraphQL Security Inspector</h1>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg mb-8">
+                <div class="px-4 py-5 sm:p-6">
+                    <label for="queryInput" class="block text-sm font-medium text-gray-700">GraphQL Query</label>
+                    <div class="mt-1">
+                        <textarea id="queryInput" name="query" rows="10" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 font-mono bg-gray-50 text-gray-900 border" placeholder="query { ... }"></textarea>
+                    </div>
+                    <button id="inspectBtn" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" aria-label="Inspect Query">
+                        Inspect Query
+                    </button>
+                </div>
+            </div>
+
+            <div id="resultsArea" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6 text-center">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Risk Score</dt>
+                            <dd id="riskScore" class="mt-1 text-3xl font-semibold"></dd>
+                        </div>
+                    </div>
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6 text-center">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Max Depth</dt>
+                            <dd id="maxDepth" class="mt-1 text-3xl font-semibold text-gray-900"></dd>
+                        </div>
+                    </div>
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6 text-center">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Aliases</dt>
+                            <dd id="totalAliases" class="mt-1 text-3xl font-semibold text-gray-900"></dd>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                    <ul id="flagsList" class="divide-y divide-gray-200">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('inspectBtn').addEventListener('click', async () => {
+            const query = document.getElementById('queryInput').value;
+            if (!query.trim()) return;
+
+            try {
+                const response = await fetch('/api/v1/inspect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+
+                document.getElementById('resultsArea').classList.remove('hidden');
+
+                // Update Risk Score Badge
+                const riskEl = document.getElementById('riskScore');
+                riskEl.textContent = data.risk_score;
+                riskEl.className = 'mt-1 text-3xl font-semibold ' + getRiskColor(data.risk_score);
+
+                // Update Metrics
+                document.getElementById('maxDepth').textContent = data.metrics.depth;
+                document.getElementById('totalAliases').textContent = data.metrics.aliases;
+
+                // Update Flags
+                const flagsList = document.getElementById('flagsList');
+                flagsList.innerHTML = '';
+
+                if (data.flags.length === 0) {
+                    flagsList.innerHTML = '<li class="px-4 py-4 sm:px-6 text-gray-500">No security issues found.</li>';
+                } else {
+                    data.flags.forEach(flag => {
+                        const li = document.createElement('li');
+                        li.className = 'px-4 py-4 sm:px-6 hover:bg-gray-50';
+                        li.innerHTML = `
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-medium text-indigo-600 truncate">${flag.rule_id}</p>
+                                <div class="ml-2 flex-shrink-0 flex">
+                                    <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-${getSeverityColor(flag.severity)}-100 text-${getSeverityColor(flag.severity)}-800">
+                                        ${flag.severity}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-2 sm:flex sm:justify-between">
+                                <div class="sm:flex">
+                                    <p class="flex items-center text-sm text-gray-500">
+                                        ${flag.description}
+                                    </p>
+                                </div>
+                            </div>
+                        `;
+                        flagsList.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error("Error inspecting query", error);
+                alert("Failed to inspect query. Please check server logs.");
+            }
+        });
+
+        function getRiskColor(score) {
+            switch(score) {
+                case 'Low': return 'text-green-600';
+                case 'Medium': return 'text-yellow-600';
+                case 'High': return 'text-orange-600';
+                case 'Critical': return 'text-red-600';
+                default: return 'text-gray-900';
+            }
+        }
+
+        function getSeverityColor(severity) {
+            switch(severity) {
+                case 'Low': return 'green';
+                case 'Medium': return 'yellow';
+                case 'High': return 'orange';
+                case 'Critical': return 'red';
+                default: return 'gray';
+            }
+        }
+    </script>
+</body>
+</html>
