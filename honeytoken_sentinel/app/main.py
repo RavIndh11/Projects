@@ -19,7 +19,7 @@ def startup_event():
 async def dashboard(request: Request):
     tokens = db.get_tokens()
     alerts = db.get_alerts()
-    return templates.TemplateResponse(request=request, name="index.html", context={"tokens": tokens, "alerts": alerts})
+    return templates.TemplateResponse("index.html", {"request": request, "tokens": tokens, "alerts": alerts})
 
 @app.post("/api/tokens", response_model=TokenResponse)
 def create_token(token_in: TokenCreate):
