@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  graphql_inspector:
+    build: .
+    container_name: graphql_inspector
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    networks:
+      - soc_network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    # Uncomment to enable read-only root filesystem for additional hardening
+    # read_only: true
+
+networks:
+  soc_network:
+    driver: bridge
