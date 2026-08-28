@@ -5,3 +5,18 @@ __pycache__/
 .pytest_cache/
 py_sast/venv/
 py_sast/**/__pycache__/
+
+# Virtual environments
+venv/
+env/
+.env
+
+# Logs
+*.log
+
+# Build Artifacts
+build/
+dist/
+*.egg-info/
+test_env/
+test_env/

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphQL Inspector - SOC Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        async function analyzeQuery() {
+            const query = document.getElementById("queryInput").value;
+            const maxDepth = parseInt(document.getElementById("maxDepth").value);
+            const maxAliases = parseInt(document.getElementById("maxAliases").value);
+            const allowIntrospection = document.getElementById("allowIntrospection").checked;
+
+            const payload = {
+                query: query,
+                max_depth_limit: maxDepth,
+                max_alias_limit: maxAliases,
+                allow_introspection: allowIntrospection
+            };
+
+            document.getElementById("results").innerHTML = "<p class='text-gray-500'>Analyzing...</p>";
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                renderResults(data);
+            } catch (error) {
+                document.getElementById("results").innerHTML = `<p class='text-red-500'>Error: ${error.message}</p>`;
+            }
+        }
+
+        function renderResults(data) {
+            if (data.status === "error") {
+                document.getElementById("results").innerHTML = `
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                        <strong class="font-bold">Error!</strong>
+                        <span class="block sm:inline">${data.message}</span>
+                    </div>`;
+                return;
+            }
+
+            let severityClass = "bg-green-100 text-green-800";
+            if (data.severity === "Medium") severityClass = "bg-yellow-100 text-yellow-800";
+            else if (data.severity === "High") severityClass = "bg-orange-100 text-orange-800";
+            else if (data.severity === "Critical") severityClass = "bg-red-100 text-red-800";
+
+            let issuesHtml = "";
+            if (data.issues && data.issues.length > 0) {
+                issuesHtml = "<ul class='list-disc pl-5 mt-2 space-y-1'>";
+                data.issues.forEach(issue => {
+                    issuesHtml += `<li class="text-red-600">${issue}</li>`;
+                });
+                issuesHtml += "</ul>";
+            } else {
+                issuesHtml = "<p class='text-green-600 font-medium mt-2'>No security issues detected.</p>";
+            }
+
+            const html = `
+                <div class="bg-white shadow rounded-lg p-6 border-l-4 ${data.is_safe ? 'border-green-500' : 'border-red-500'}">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Analysis Results</h3>
+                        <span class="px-3 py-1 rounded-full text-sm font-semibold ${severityClass}">
+                            ${data.severity} Risk (Score: ${data.risk_score})
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="block text-sm text-gray-500">Max Depth</span>
+                            <span class="text-xl font-mono">${data.depth}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="block text-sm text-gray-500">Aliases</span>
+                            <span class="text-xl font-mono">${data.aliases}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="block text-sm text-gray-500">Fields Total</span>
+                            <span class="text-xl font-mono">${data.field_count}</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded">
+                            <span class="block text-sm text-gray-500">Introspection</span>
+                            <span class="text-xl font-mono ${data.introspection ? 'text-red-500' : 'text-green-500'}">${data.introspection ? 'Yes' : 'No'}</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h4 class="font-medium text-gray-700 border-b pb-1">Findings</h4>
+                        ${issuesHtml}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("results").innerHTML = html;
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800 font-sans">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <header class="mb-8 flex items-center gap-3 border-b border-gray-300 pb-4">
+            <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">GraphQL Inspector</h1>
+                <p class="text-sm text-gray-600">SOC Tool for GraphQL Query Security Analysis</p>
+            </div>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Input Section -->
+            <section class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4 border-b pb-2">Query Input</h2>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">GraphQL Payload</label>
+                    <textarea id="queryInput" rows="10" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm p-3 border" placeholder="query { ... }"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Max Depth Limit</label>
+                        <input type="number" id="maxDepth" value="5" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Max Alias Limit</label>
+                        <input type="number" id="maxAliases" value="5" class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border">
+                    </div>
+                </div>
+
+                <div class="mb-6 flex items-center">
+                    <input type="checkbox" id="allowIntrospection" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <label for="allowIntrospection" class="ml-2 block text-sm text-gray-900">Allow Introspection Queries</label>
+                </div>
+
+                <button onclick="analyzeQuery()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded transition duration-150 ease-in-out">
+                    Analyze Query
+                </button>
+            </section>
+
+            <!-- Results Section -->
+            <section>
+                <h2 class="text-xl font-semibold mb-4 border-b pb-2">Analysis Results</h2>
+                <div id="results" class="min-h-[200px] flex items-center justify-center bg-gray-50 border border-gray-200 rounded-lg shadow-inner">
+                    <p class="text-gray-400 text-center">Submit a query to see analysis results.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
