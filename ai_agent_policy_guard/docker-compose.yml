@@ -5,7 +5,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - API_KEY=${API_KEY:-dev_api_key}
+      - API_KEY=${API_KEY}
       - POLICY_PATH=/app/policies/default.yaml
       - LOG_LEVEL=INFO
     volumes:

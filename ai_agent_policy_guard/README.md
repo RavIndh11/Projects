@@ -37,11 +37,15 @@ As autonomous AI agents become more prevalent, they are frequently granted acces
    ```bash
    cd ai_agent_policy_guard
    ```
-2. Build and run using Docker Compose:
+2. Create a `.env` file and set the API Key:
+   ```bash
+   echo "API_KEY=your_secure_api_key_here" > .env
+   ```
+3. Build and run using Docker Compose:
    ```bash
    docker compose up --build -d
    ```
-3. Access the SOC Dashboard at: `http://localhost:8000`
+4. Access the SOC Dashboard at: `http://localhost:8000`
 
 ### Option 2: Native Setup (Python 3.11+)
 1. Create a virtual environment and install dependencies:
@@ -50,7 +54,7 @@ As autonomous AI agents become more prevalent, they are frequently granted acces
    source venv/bin/activate
    pip install -r requirements.txt
    ```
-2. Set the required environment variables (optional, defaults are provided):
+2. Set the required environment variables:
    ```bash
    export API_KEY="your_secure_api_key_here"
    export POLICY_PATH="policies/default.yaml"
@@ -63,7 +67,7 @@ As autonomous AI agents become more prevalent, they are frequently granted acces
 ## Usage Examples
 
 ### Web Dashboard
-Navigate to `http://localhost:8000/` in your browser. Enter the API Key (`dev_api_key` by default). You can manually test payloads, such as:
+Navigate to `http://localhost:8000/` in your browser. Enter the API Key you configured. You can manually test payloads, such as:
 - **Allowed**: Tool `shell_execute`, Parameters `{"command": "ls -la"}`
 - **Blocked**: Tool `shell_execute`, Parameters `{"command": "rm -rf /"}`
 
@@ -71,7 +75,7 @@ Navigate to `http://localhost:8000/` in your browser. Enter the API Key (`dev_ap
 ```bash
 curl -X POST http://localhost:8000/api/v1/evaluate \
      -H "Content-Type: application/json" \
-     -H "X-API-Key: dev_api_key" \
+     -H "X-API-Key: your_secure_api_key_here" \
      -d '{
            "tool_name": "shell_execute",
            "agent_id": "test-agent-01",
