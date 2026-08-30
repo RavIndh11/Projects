@@ -16,3 +16,6 @@
 
 **Learning:** When modifying forms, especially those that trigger long-running analysis tasks, it's critical to add immediate visual feedback (like a loading spinner and disabled state on the submit button). This prevents duplicate submissions and reduces user anxiety. Additionally, explicit indicators like red asterisks must be paired with `aria-required="true"` on the input element to ensure both visual and screen reader users understand the field is mandatory.
 **Action:** Next time I modify a form, I will ensure it has a robust loading state and that all required fields are clearly marked visually and semantically.
+## 2025-02-28 - Visual Loading States on Auto-Refreshing UI
+**Learning:** When combining manual user actions (like a "Refresh" button) with background auto-polling in a dashboard, visual loading states (like spinners and disabled buttons) should only be triggered by the manual action. Triggering them on the auto-polling interval creates an annoying and distracting UI flicker.
+**Action:** Always check if a dashboard has a `setInterval` for fetching data before adding loading states. Pass an `isManual` flag from the button's event handler to the fetch function to selectively apply the loading UI only when the user explicitly interacts with it.
