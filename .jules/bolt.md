@@ -6,3 +6,6 @@
 **Learning:** In heavily executed log parsing loops (like standard access logs), constructing temporary lists and calling `dict.items()` inside the loop introduces significant overhead. Replacing `targets = [a, b, c]` and `for k, v in PATTERNS.items()` with a pre-calculated class-level tuple and explicitly ordered sequential evaluations avoids thousands of small, unnecessary allocations and yields a 10%+ performance boost.
 
 **Action:** Whenever iterating over dicts or building transient lists within hot paths (especially >10k iterations), hoist transformations to the module or class level and flatten nested loops to explicit conditional blocks if small enough.
+## 2024-05-24 - Fast regex filtering
+**Learning:** Short-circuiting expensive regex searches in hot loops with string membership checks significantly improves performance.
+**Action:** Prioritize evaluating computationally cheap checks before expensive operations in Python hot loops.
