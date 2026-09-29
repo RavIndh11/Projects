@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  jwt-analyzer:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+    # Remove volume mount for production image, but useful for dev
+    # volumes:
+    #   - ./app:/app/app
+    networks:
+      - security-net
+    restart: unless-stopped
+
+networks:
+  security-net:
+    driver: bridge

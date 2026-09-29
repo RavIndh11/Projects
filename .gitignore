@@ -5,3 +5,23 @@ __pycache__/
 .pytest_cache/
 py_sast/venv/
 py_sast/**/__pycache__/
+
+# Python virtual environments
+venv/
+env/
+.venv/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDEs and OS
+.vscode/
+.idea/
+.DS_Store
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
