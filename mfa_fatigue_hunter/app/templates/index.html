@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFA Fatigue Hunter Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans p-6">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                    <svg class="w-8 h-8 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    MFA Fatigue Hunter
+                </h1>
+                <p class="text-gray-600 mt-1">Real-time SOC Dashboard for detecting MFA Bombing.</p>
+            </div>
+            <button onclick="window.location.reload()" class="bg-indigo-600 text-white px-4 py-2 rounded shadow hover:bg-indigo-700 transition">
+                Refresh
+            </button>
+        </header>
+
+        <main>
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800">Recent Critical Alerts</h2>
+                </div>
+
+                {% if not alerts %}
+                <div class="p-6 text-center text-gray-500">
+                    No MFA fatigue attacks detected recently.
+                </div>
+                {% else %}
+                <ul class="divide-y divide-gray-200">
+                    {% for alert in alerts %}
+                    <li class="p-6 hover:bg-red-50 transition">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="bg-red-100 text-red-800 text-xs font-semibold px-2.5 py-0.5 rounded mr-3">CRITICAL</span>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">User: <span class="font-mono bg-gray-100 px-1 rounded">{{ alert.user_id }}</span></p>
+                                    <p class="text-sm text-gray-600 mt-1">{{ alert.message }}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500">{{ alert.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC') }}</p>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </main>
+
+        <footer class="mt-8 text-center text-sm text-gray-500">
+            Automated Detection Engineering - SOC Automation
+        </footer>
+    </div>
+</body>
+</html>
