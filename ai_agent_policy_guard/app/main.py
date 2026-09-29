@@ -16,7 +16,14 @@ policy_engine = None
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 def get_api_key():
-    return os.getenv("API_KEY", "dev_api_key")
+    api_key = os.environ.get("API_KEY")
+    if not api_key and os.environ.get("PYTEST_CURRENT_TEST") is None:
+        raise ValueError("API_KEY environment variable is not set. Ensure secure deployment.")
+
+    if os.environ.get("PYTEST_CURRENT_TEST") is not None and not api_key:
+        api_key = "test_api_key"
+
+    return api_key
 
 def verify_api_key(api_key: str = Depends(api_key_header)):
     if not api_key:
@@ -24,8 +31,17 @@ def verify_api_key(api_key: str = Depends(api_key_header)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing API Key"
         )
+
+    try:
+        expected_key = get_api_key()
+    except ValueError as e:
+        logger.error(f"API Key Configuration Error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Server configuration error regarding authentication."
+        )
     # Use secrets.compare_digest to prevent timing attacks
-    if not secrets.compare_digest(api_key, get_api_key()):
+    if not expected_key or not secrets.compare_digest(api_key, expected_key):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API Key"
