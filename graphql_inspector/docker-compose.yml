@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  graphql-inspector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: graphql-inspector:latest
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  internal:
+    driver: bridge

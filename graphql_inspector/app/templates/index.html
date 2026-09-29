@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GraphQL Security Inspector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800 p-8">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-3xl font-bold mb-6 text-indigo-600 border-b pb-4">GraphQL Security Inspector</h1>
+
+        <form action="/ui/inspect" method="post" class="space-y-4">
+            <div>
+                <label for="query" class="block text-sm font-medium text-gray-700">GraphQL Query</label>
+                <textarea id="query" name="query" rows="8" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm font-mono border p-2" required placeholder="query { users { id name } }">{{ query if query else '' }}</textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="max_depth" class="block text-sm font-medium text-gray-700">Max Depth</label>
+                    <input type="number" id="max_depth" name="max_depth" value="{{ max_depth if max_depth else 5 }}" min="1" max="20" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+                <div>
+                    <label for="max_aliases" class="block text-sm font-medium text-gray-700">Max Aliases</label>
+                    <input type="number" id="max_aliases" name="max_aliases" value="{{ max_aliases if max_aliases else 3 }}" min="0" max="50" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                </div>
+                <div class="flex items-center mt-6">
+                    <input type="checkbox" id="allow_introspection" name="allow_introspection" value="true" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" {% if allow_introspection %}checked{% endif %}>
+                    <label for="allow_introspection" class="ml-2 block text-sm text-gray-900">Allow Introspection</label>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Inspect Query
+            </button>
+        </form>
+
+        {% if error %}
+        <div class="mt-6 bg-red-50 border-l-4 border-red-400 p-4">
+            <div class="flex">
+                <div class="ml-3">
+                    <p class="text-sm text-red-700 font-bold">Error</p>
+                    <p class="text-sm text-red-700">{{ error }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if result %}
+        <div class="mt-8 border-t pt-6">
+            <h2 class="text-2xl font-bold mb-4">Results</h2>
+
+            {% if result.is_valid %}
+                <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-4">
+                    <div class="flex">
+                        <div class="ml-3">
+                            <p class="text-sm text-green-700 font-bold">Passed</p>
+                            <p class="text-sm text-green-700">The query passed all security checks.</p>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+                    <div class="flex">
+                        <div class="ml-3">
+                            <p class="text-sm text-red-700 font-bold">Failed</p>
+                            <p class="text-sm text-red-700">The query violates security policies or is malformed.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {% if result.error %}
+                <div class="bg-yellow-50 border border-yellow-200 p-4 rounded mb-4">
+                    <h3 class="font-bold text-yellow-800">Parse Error</h3>
+                    <p class="text-yellow-700 font-mono text-sm mt-1">{{ result.error }}</p>
+                </div>
+                {% endif %}
+
+                {% if result.violations %}
+                <h3 class="font-bold text-gray-700 mb-2">Violations:</h3>
+                <ul class="space-y-3">
+                    {% for violation in result.violations %}
+                    <li class="bg-white border rounded shadow-sm p-3 flex items-start">
+                        {% if violation.severity == 'High' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mr-3 mt-0.5">High</span>
+                        {% elif violation.severity == 'Medium' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-3 mt-0.5">Medium</span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-3 mt-0.5">Low</span>
+                        {% endif %}
+                        <div>
+                            <p class="font-semibold text-gray-800">{{ violation.issue_type }}</p>
+                            <p class="text-gray-600 text-sm">{{ violation.message }}</p>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
