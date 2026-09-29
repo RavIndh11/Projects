@@ -11,7 +11,7 @@ from app.schemas import (
 )
 
 def _convert_path_to_regex(path: str) -> str:
-    """
+    r"""
     Converts an OpenAPI path like /api/v1.0/users/{id} to a regex pattern like ^/api/v1\.0/users/[^/]+$
     """
     # First, escape regex special characters (except {} which we process next)
@@ -96,12 +96,34 @@ def analyze_endpoints(documented_paths: List[OpenAPIPath], logs: List[LogEntry])
     # Track which documented paths have been hit
     documented_hits = { (p.path, m): False for p in documented_paths for m in p.methods }
 
+    # ⚡ Bolt: Pre-compile regex patterns outside the loop for O(1) matching overhead
+    compiled_regexes = [(re.compile(p.regex_pattern), p) for p in documented_paths]
+
+    # ⚡ Bolt: Cache regex match results to avoid redundant work for repeated API calls
+    path_match_cache = {}
+
     for log in logs:
         matched = False
-        for doc_path in documented_paths:
-            if re.match(doc_path.regex_pattern, log.path) and log.method in doc_path.methods:
+        log_key = (log.method, log.path)
+
+        # ⚡ Bolt: Check cache first (O(1) lookup vs O(n) regex matches)
+        if log_key in path_match_cache:
+            matched = True
+            doc_path = path_match_cache[log_key]
+            documented_hits[(doc_path.path, log.method)] = True
+            key = (log.method, doc_path.path)
+            endpoint_stats[key].access_count += 1
+            continue
+
+        for compiled_pattern, doc_path in compiled_regexes:
+            # ⚡ Bolt: Evaluate computationally cheap checks (log.method in doc_path.methods)
+            # before expensive operations (compiled_pattern.match) to maximize short-circuiting
+            if log.method in doc_path.methods and compiled_pattern.match(log.path):
                 matched = True
                 documented_hits[(doc_path.path, log.method)] = True
+
+                # Cache the successful match
+                path_match_cache[log_key] = doc_path
 
                 key = (log.method, doc_path.path)
                 if key not in endpoint_stats:
