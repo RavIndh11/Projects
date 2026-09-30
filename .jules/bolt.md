@@ -9,3 +9,6 @@
 ## 2024-05-24 - Fast regex filtering
 **Learning:** Short-circuiting expensive regex searches in hot loops with string membership checks significantly improves performance.
 **Action:** Prioritize evaluating computationally cheap checks before expensive operations in Python hot loops.
+## 2025-03-02 - Python Regex Dynamic Compilation Inside Methods
+**Learning:** Compiling regex dynamically inside class methods rather than initializing them at the class level or in `__init__` can cause a massive performance hit because the `re.compile()` operation occurs on every method call.
+**Action:** When creating Python classes that rely on constant regular expressions, hoist the compilation out of the method scope to the module or class level to ensure they are compiled exactly once. Combine this with string membership short-circuiting to further maximize efficiency.

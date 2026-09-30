@@ -3,6 +3,22 @@ import os
 import re
 
 class Scanner:
+    # Vulnerable contexts based on GitHub Actions documentation
+    _vuln_contexts = [
+        r'github\.event\.issue\.title',
+        r'github\.event\.issue\.body',
+        r'github\.event\.pull_request\.title',
+        r'github\.event\.pull_request\.body',
+        r'github\.event\.comment\.body',
+        r'github\.event\.review\.body',
+        r'github\.event\.pages.*\.page_name',
+        r'github\.event\.commits.*\.message',
+        r'github\.head_ref',
+        r'github\.base_ref'
+    ]
+    # ⚡ Bolt: Pre-compile regex at class level to avoid recompilation on every method call
+    _script_injection_pattern = re.compile(r'\${{\s*(' + '|'.join(_vuln_contexts) + r')\s*}}')
+
     def __init__(self):
         self.rules = [
             self.check_pull_request_target,
@@ -124,22 +140,6 @@ class Scanner:
         if not isinstance(jobs, dict):
             return findings
 
-        # Vulnerable contexts based on GitHub Actions documentation
-        vuln_contexts = [
-            r'github\.event\.issue\.title',
-            r'github\.event\.issue\.body',
-            r'github\.event\.pull_request\.title',
-            r'github\.event\.pull_request\.body',
-            r'github\.event\.comment\.body',
-            r'github\.event\.review\.body',
-            r'github\.event\.pages.*\.page_name',
-            r'github\.event\.commits.*\.message',
-            r'github\.head_ref',
-            r'github\.base_ref'
-        ]
-
-        pattern = re.compile(r'\${{\s*(' + '|'.join(vuln_contexts) + r')\s*}}')
-
         for job_name, job_data in jobs.items():
             if not isinstance(job_data, dict):
                 continue
@@ -151,7 +151,8 @@ class Scanner:
                 if not isinstance(step, dict):
                     continue
                 run = step.get('run', '')
-                if isinstance(run, str) and pattern.search(run):
+                # ⚡ Bolt: Fast string inclusion check before expensive regex matching
+                if isinstance(run, str) and "${{" in run and self._script_injection_pattern.search(run):
                     findings.append({
                         'file': filepath,
                         'rule': 'script_injection',
