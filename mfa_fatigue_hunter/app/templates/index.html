@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFA Fatigue Hunter Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">MFA Fatigue Hunter Dashboard</h1>
+            <p class="text-gray-600 mt-2">Real-time monitoring of MFA fatigue and bombing attacks.</p>
+        </header>
+
+        <main>
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Detections</h3>
+                    <button onclick="window.location.reload()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm">
+                        Refresh
+                    </button>
+                </div>
+                <div class="border-t border-gray-200">
+                    <ul role="list" class="divide-y divide-gray-200">
+                        {% if detections %}
+                            {% for detection in detections %}
+                            <li class="px-4 py-4 sm:px-6 hover:bg-gray-50 transition duration-150 ease-in-out">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-sm font-medium text-indigo-600 truncate">
+                                        User: {{ detection.user_id }}
+                                    </p>
+                                    <div class="ml-2 flex-shrink-0 flex">
+                                        {% if detection.severity == 'CRITICAL' %}
+                                            <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                {{ detection.severity }}
+                                            </p>
+                                        {% elif detection.severity == 'HIGH' %}
+                                            <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
+                                                {{ detection.severity }}
+                                            </p>
+                                        {% else %}
+                                            <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                {{ detection.severity }}
+                                            </p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="mt-2 sm:flex sm:justify-between">
+                                    <div class="sm:flex">
+                                        <p class="flex items-center text-sm text-gray-500">
+                                            {{ detection.message }}
+                                        </p>
+                                    </div>
+                                    <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                        <p>
+                                            Events: {{ detection.event_count }} |
+                                            IPs: {{ detection.source_ips | join(', ') }} |
+                                            Time: {{ detection.last_event_time.strftime('%Y-%m-%d %H:%M:%S UTC') }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="px-4 py-8 sm:px-6 text-center text-gray-500">
+                                No anomalies detected yet. System is monitoring.
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
