@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  mfa-fatigue-hunter:
+    build: .
+    container_name: mfa-fatigue-hunter
+    ports:
+      - "8000:8000"
+    environment:
+      - LOG_LEVEL=INFO
+    env_file:
+      - .env.example
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - soc-network
+
+networks:
+  soc-network:
+    driver: bridge
