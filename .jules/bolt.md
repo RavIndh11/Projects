@@ -9,3 +9,6 @@
 ## 2024-05-24 - Fast regex filtering
 **Learning:** Short-circuiting expensive regex searches in hot loops with string membership checks significantly improves performance.
 **Action:** Prioritize evaluating computationally cheap checks before expensive operations in Python hot loops.
+## 2024-05-19 - Regex matching optimization in hot loop
+**Learning:** Repeatedly applying `re.match` within nested hot loops (like cross-referencing log files to OpenAPI path specs) causes significant bottlenecks, especially when checking many unmatched requests against complex regex paths.
+**Action:** When cross-referencing arrays/lists strings to regex in a loop, pre-compile the regex objects outside of the loop, perform cheap evaluations (like string equality) first to short-circuit, and maintain a result dictionary caching identical payload evaluations.
