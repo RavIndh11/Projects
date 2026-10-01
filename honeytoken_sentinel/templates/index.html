@@ -45,6 +45,12 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ token.triggered_count }}</td>
                         </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-10 whitespace-nowrap text-sm text-center text-gray-500">
+                                No honeytokens created yet. <button onclick="document.getElementById('create-modal').classList.remove('hidden')" class="text-blue-600 hover:text-blue-800 font-medium ml-1 focus:outline-none focus:underline" aria-label="Open Create Token Modal">Create one to get started.</button>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -79,6 +85,12 @@
                                     {% else %}bg-green-100 text-green-800{% endif %}">
                                     {{ alert.severity }}
                                 </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-10 whitespace-nowrap text-sm text-center text-gray-500">
+                                No alerts detected.
                             </td>
                         </tr>
                         {% endfor %}
