@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  web_shell_hunter:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - LOG_LEVEL=INFO
+    env_file:
+      - .env
+    networks:
+      - security_net
+    restart: unless-stopped
+
+networks:
+  security_net:
+    driver: bridge
