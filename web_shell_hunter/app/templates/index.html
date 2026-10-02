@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Shell Hunter SOC Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 h-screen font-sans">
+    <div class="container mx-auto p-8 max-w-4xl">
+        <header class="mb-8 border-b pb-4">
+            <h1 class="text-3xl font-bold text-gray-800">Web Shell Hunter</h1>
+            <p class="text-gray-600 mt-2">Real-time Web Shell Detection Dashboard</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-white p-6 rounded shadow">
+                <h2 class="text-xl font-semibold mb-4">Input Payload</h2>
+                <form id="scanForm">
+                    <textarea id="payloadInput" rows="10" class="w-full border-gray-300 rounded focus:ring focus:ring-blue-200 border p-2" placeholder="Paste PHP, Shell script or suspicious payload here..."></textarea>
+                    <button type="submit" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">Scan Payload</button>
+                </form>
+            </div>
+
+            <div class="bg-white p-6 rounded shadow flex flex-col">
+                <h2 class="text-xl font-semibold mb-4">Analysis Results</h2>
+                <div id="results" class="flex-grow bg-gray-50 border border-gray-200 rounded p-4 font-mono text-sm overflow-auto text-gray-700 whitespace-pre-wrap flex items-center justify-center">
+                    Awaiting payload...
+                </div>
+                <div id="statusBadge" class="mt-4 p-2 rounded text-center font-bold hidden"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('scanForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = document.getElementById('payloadInput').value;
+            const resultsDiv = document.getElementById('results');
+            const statusBadge = document.getElementById('statusBadge');
+
+            if (!content.trim()) {
+                resultsDiv.innerText = "Please enter a payload.";
+                statusBadge.classList.add('hidden');
+                return;
+            }
+
+            resultsDiv.innerText = "Scanning...";
+            statusBadge.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+                const data = await response.json();
+
+                resultsDiv.innerText = JSON.stringify(data, null, 2);
+
+                statusBadge.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-yellow-100', 'text-yellow-800', 'bg-orange-100', 'text-orange-800', 'bg-red-100', 'text-red-800');
+
+                if (data.severity === "Low") {
+                    statusBadge.classList.add('bg-green-100', 'text-green-800');
+                    statusBadge.innerText = "Status: Clean / Low Risk";
+                } else if (data.severity === "Medium") {
+                    statusBadge.classList.add('bg-yellow-100', 'text-yellow-800');
+                    statusBadge.innerText = "Status: Suspicious (Medium)";
+                } else if (data.severity === "High") {
+                    statusBadge.classList.add('bg-orange-100', 'text-orange-800');
+                    statusBadge.innerText = "Status: Malicious (High)";
+                } else if (data.severity === "Critical") {
+                    statusBadge.classList.add('bg-red-100', 'text-red-800');
+                    statusBadge.innerText = "Status: Critical Web Shell Detected";
+                }
+            } catch (error) {
+                resultsDiv.innerText = "Error scanning payload.";
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
