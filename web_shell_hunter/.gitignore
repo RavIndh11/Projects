@@ -1,0 +1,25 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Python virtual environments
+venv/
+env/
+.venv/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDEs and OS
+.vscode/
+.idea/
+.DS_Store
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
