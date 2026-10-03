@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  secure_upload_gateway:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV_FILE=.env
+    env_file:
+      - .env
+    networks:
+      - scan_net
+    restart: unless-stopped
+
+networks:
+  scan_net:
+    driver: bridge
