@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Upload Gateway</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        async function uploadFile(event) {
+            event.preventDefault();
+            const fileInput = document.getElementById('file-upload');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+
+            resultDiv.classList.add('hidden');
+            loadingDiv.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/api/v1/scan', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                loadingDiv.classList.add('hidden');
+                resultDiv.classList.remove('hidden');
+
+                if (response.ok) {
+                    displayResult(data.result);
+                } else {
+                    resultDiv.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                        <span class="block sm:inline">${data.detail || 'An error occurred'}</span>
+                    </div>`;
+                }
+            } catch (error) {
+                loadingDiv.classList.add('hidden');
+                resultDiv.classList.remove('hidden');
+                resultDiv.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">Network error occurred.</span>
+                </div>`;
+            }
+        }
+
+        function displayResult(result) {
+            const resultDiv = document.getElementById('result');
+            let severityColor = 'bg-gray-100 text-gray-800';
+
+            if (result.severity === 'Critical') severityColor = 'bg-red-600 text-white';
+            else if (result.severity === 'High') severityColor = 'bg-orange-500 text-white';
+            else if (result.severity === 'Medium') severityColor = 'bg-yellow-400 text-black';
+            else if (result.severity === 'Low') severityColor = 'bg-green-500 text-white';
+
+            let html = `
+                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                    <div class="px-4 py-5 sm:px-6 flex justify-between items-center border-b border-gray-200">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Scan Results for <span id="scan-filename"></span></h3>
+                        <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${severityColor}">
+                            ${result.severity}
+                        </span>
+                    </div>
+                    <div class="border-t border-gray-200">
+                        <dl>
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <dt class="text-sm font-medium text-gray-500">Status</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    ${result.is_safe ?
+                                        '<span class="text-green-600 font-bold">✅ Safe to proceed</span>' :
+                                        '<span class="text-red-600 font-bold">❌ Threat Detected</span>'}
+                                </dd>
+                            </div>
+                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-t border-gray-200">
+                                <dt class="text-sm font-medium text-gray-500">Matched Rules</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    ${result.matched_rules.length > 0 ?
+                                        '<ul class="list-disc pl-5">' + result.matched_rules.map(rule => `<li>${rule}</li>`).join('') + '</ul>' :
+                                        'None'}
+                                </dd>
+                            </div>
+                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-t border-gray-200">
+                                <dt class="text-sm font-medium text-gray-500">Details</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                    <ul class="list-disc pl-5">
+                                        ${result.details.map(detail => `<li>${detail}</li>`).join('')}
+                                    </ul>
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+            `;
+            resultDiv.innerHTML = html;
+            document.getElementById('scan-filename').textContent = result.filename;
+        }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                    Secure Upload Gateway
+                </h2>
+                <p class="mt-4 text-lg text-gray-500">
+                    Test files against polyglots, Zip Slip, and extension spoofing before they reach your backend.
+                </p>
+            </div>
+
+            <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 mb-8">
+                <form onsubmit="uploadFile(event)" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Upload file for analysis</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                            <div class="space-y-1 text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <div class="flex text-sm text-gray-600 justify-center">
+                                    <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                                        <span>Select a file</span>
+                                        <input id="file-upload" name="file-upload" type="file" class="sr-only" required>
+                                    </label>
+                                </div>
+                                <p class="text-xs text-gray-500">
+                                    Any file up to 10MB
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Scan File
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="loading" class="hidden text-center py-4">
+                <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-indigo-600 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-gray-600">Analyzing file...</span>
+            </div>
+
+            <div id="result" class="hidden">
+                <!-- Results injected here -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>
