@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  secure_upload_gateway:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.example
+    networks:
+      - security_net
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  security_net:
+    driver: bridge
