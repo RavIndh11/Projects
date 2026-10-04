@@ -96,20 +96,31 @@ def analyze_endpoints(documented_paths: List[OpenAPIPath], logs: List[LogEntry])
     # Track which documented paths have been hit
     documented_hits = { (p.path, m): False for p in documented_paths for m in p.methods }
 
+    # OPTIMIZATION: Compile regular expressions once outside the hot loop
+    compiled_paths = []
+    for doc_path in documented_paths:
+        compiled_paths.append({
+            "pattern": re.compile(doc_path.regex_pattern),
+            "methods": set(doc_path.methods),
+            "path": doc_path.path
+        })
+
     for log in logs:
         matched = False
-        for doc_path in documented_paths:
-            if re.match(doc_path.regex_pattern, log.path) and log.method in doc_path.methods:
+        for c_path in compiled_paths:
+            # OPTIMIZATION: Check cheap method match before expensive regex
+            if log.method in c_path["methods"] and c_path["pattern"].match(log.path):
                 matched = True
-                documented_hits[(doc_path.path, log.method)] = True
+                doc_path_path = c_path["path"]
+                documented_hits[(doc_path_path, log.method)] = True
 
-                key = (log.method, doc_path.path)
+                key = (log.method, doc_path_path)
                 if key not in endpoint_stats:
                     endpoint_stats[key] = AnalyzedEndpoint(
                         method=log.method,
-                        path=doc_path.path,
+                        path=doc_path_path,
                         category=EndpointCategory.DOCUMENTED,
-                        matched_documented_path=doc_path.path
+                        matched_documented_path=doc_path_path
                     )
                 endpoint_stats[key].access_count += 1
                 break
