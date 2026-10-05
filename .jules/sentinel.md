@@ -12,3 +12,8 @@
 **Vulnerability:** A hardcoded default API key ("dev_api_key") was used as a fallback if the API_KEY environment variable was not set, allowing potential unauthorized access.
 **Learning:** Developers sometimes add fallback default credentials for easier local development or testing, but this poses a critical risk if it ends up in a production environment.
 **Prevention:** Never use default hardcoded credentials as fallbacks. In development/testing, inject credentials explicitly via environment variables or use a `.env` file (never committed). If testing requires a mock key, conditionally apply it strictly within the test environment context (e.g., checking `PYTEST_CURRENT_TEST`).
+
+## 2024-05-20 - Hardcoded Default API Key Fallback
+**Vulnerability:** A hardcoded default API key ("default-dev-key") was used as a fallback if the API_KEY environment variable was not set, allowing potential unauthorized access.
+**Learning:** Default fallbacks in application code can be inadvertently relied upon in production environments. Tests should explicitly inject mock credentials instead of relying on the application to provide default test credentials.
+**Prevention:** Never use default hardcoded credentials as fallbacks. In development/testing, inject credentials explicitly via environment variables or test setups. Require explicit credentials and fail securely if they are not provided.
