@@ -1,10 +1,14 @@
 import pytest
-from fastapi.testclient import TestClient
-from app.main import app
 import os
 
+# Setup explicitly injected mock key
+API_KEY = "test_api_key"
+os.environ["API_KEY"] = API_KEY
+
+from fastapi.testclient import TestClient
+from app.main import app
+
 client = TestClient(app)
-API_KEY = os.getenv("API_KEY", "default-dev-key")
 HEADERS = {"X-API-Key": API_KEY}
 
 def test_health_check():
