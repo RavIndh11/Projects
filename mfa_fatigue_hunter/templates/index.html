@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFA Fatigue Hunter Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        async function fetchAlerts() {
+            try {
+                // In a real app this dashboard would use session auth,
+                // but for this prototype we assume this endpoint is internally accessible.
+                const response = await fetch('/api/v1/alerts');
+                const data = await response.json();
+                renderAlerts(data.alerts);
+            } catch (error) {
+                console.error("Failed to fetch alerts", error);
+            }
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g,
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag] || tag)
+            );
+        }
+
+        function renderAlerts(alerts) {
+            const container = document.getElementById('alerts-container');
+            container.innerHTML = '';
+
+            if (alerts.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No recent alerts.</p>';
+                return;
+            }
+
+            alerts.forEach(alert => {
+                const color = alert.severity === 'Critical' ? 'bg-red-100 border-red-500 text-red-700' : 'bg-yellow-100 border-yellow-500 text-yellow-700';
+                const badge = alert.severity === 'Critical' ? 'bg-red-500' : 'bg-yellow-500';
+
+                // Prevent XSS
+                const safeUserId = escapeHTML(alert.user_id);
+                const safeDesc = escapeHTML(alert.description);
+
+                const card = `
+                    <div class="border-l-4 p-4 mb-4 rounded shadow-sm ${color}">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold text-lg">${safeUserId}</span>
+                            <span class="px-2 py-1 text-xs font-bold text-white rounded ${badge}">${alert.severity}</span>
+                        </div>
+                        <p class="text-sm">${safeDesc}</p>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        setInterval(fetchAlerts, 5000);
+        window.onload = fetchAlerts;
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-gray-900 text-white p-4">
+        <div class="container mx-auto">
+            <h1 class="text-2xl font-bold tracking-tight">MFA Fatigue Hunter</h1>
+            <p class="text-sm text-gray-400">Real-time SOC Dashboard</p>
+        </div>
+    </nav>
+    <main class="container mx-auto p-4 mt-6">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Recent Alerts</h2>
+            <div id="alerts-container" class="space-y-4">
+                <p class="text-gray-500">Loading...</p>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
