@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Upload Gateway</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .drag-active {
+            border-color: #3b82f6 !important;
+            background-color: #eff6ff !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800 font-sans">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <header class="mb-8 flex items-center justify-between border-b pb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-2">
+                    🛡️ Secure Upload Gateway
+                </h1>
+                <p class="text-gray-600 mt-1">Intercept and analyze file uploads for vulnerabilities.</p>
+            </div>
+            <div class="text-sm font-medium bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                SOC Analyst Dashboard
+            </div>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Upload Section -->
+            <section class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Upload Target File</h2>
+
+                <form id="uploadForm" class="space-y-4">
+                    <div id="dropzone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-colors cursor-pointer hover:bg-gray-50">
+                        <input type="file" id="fileInput" name="file" class="hidden">
+                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        <p class="text-sm text-gray-600">Click to select a file or drag and drop</p>
+                        <p id="fileNameDisplay" class="text-xs text-blue-600 mt-2 font-medium break-all"></p>
+                    </div>
+
+                    <button type="submit" id="analyzeBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        Analyze File
+                    </button>
+                </form>
+
+                <div id="loadingIndicator" class="hidden mt-4 text-center">
+                    <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                    <p class="text-sm text-gray-600 mt-2">Analyzing...</p>
+                </div>
+
+                <div id="errorMsg" class="hidden mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-sm" role="alert"></div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="bg-white rounded-lg shadow-md p-6 border border-gray-200 flex flex-col h-full">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Analysis Results</h2>
+
+                <div id="emptyState" class="flex-grow flex flex-col items-center justify-center text-gray-400">
+                    <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <p>Upload a file to see results</p>
+                </div>
+
+                <div id="resultsContainer" class="hidden flex-grow flex flex-col space-y-4">
+                    <!-- Status Badge -->
+                    <div id="overallStatus" class="p-4 rounded-md font-bold text-lg text-center flex items-center justify-center gap-2">
+                        <!-- Content injected via JS -->
+                    </div>
+
+                    <!-- File Info -->
+                    <div class="bg-gray-50 p-3 rounded text-sm border border-gray-100">
+                        <div class="grid grid-cols-3 gap-2 mb-1">
+                            <span class="text-gray-500 font-medium">Filename:</span>
+                            <span id="resFilename" class="col-span-2 text-gray-900 break-all font-mono"></span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 mb-1">
+                            <span class="text-gray-500 font-medium">Extension:</span>
+                            <span id="resExt" class="col-span-2 text-gray-900 font-mono"></span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <span class="text-gray-500 font-medium">MIME Type:</span>
+                            <span id="resMime" class="col-span-2 text-gray-900 font-mono"></span>
+                        </div>
+                    </div>
+
+                    <!-- Findings List -->
+                    <div class="flex-grow">
+                        <h3 class="text-sm font-bold text-gray-700 uppercase mb-2">Findings</h3>
+                        <ul id="findingsList" class="space-y-2">
+                            <!-- Items injected via JS -->
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+            const uploadForm = document.getElementById('uploadForm');
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const errorMsg = document.getElementById('errorMsg');
+
+            const emptyState = document.getElementById('emptyState');
+            const resultsContainer = document.getElementById('resultsContainer');
+
+            // UI elements for results
+            const overallStatus = document.getElementById('overallStatus');
+            const resFilename = document.getElementById('resFilename');
+            const resExt = document.getElementById('resExt');
+            const resMime = document.getElementById('resMime');
+            const findingsList = document.getElementById('findingsList');
+
+            // --- File Selection Logic ---
+            dropzone.addEventListener('click', () => fileInput.click());
+
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('drag-active');
+            });
+
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('drag-active');
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('drag-active');
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    updateFileName();
+                }
+            });
+
+            fileInput.addEventListener('change', updateFileName);
+
+            function updateFileName() {
+                if (fileInput.files.length > 0) {
+                    fileNameDisplay.textContent = fileInput.files[0].name;
+                } else {
+                    fileNameDisplay.textContent = '';
+                }
+            }
+
+            // --- Form Submission ---
+            uploadForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                if (fileInput.files.length === 0) {
+                    showError('Please select a file first.');
+                    return;
+                }
+
+                const file = fileInput.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // Reset UI
+                hideError();
+                analyzeBtn.disabled = true;
+                loadingIndicator.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                resultsContainer.classList.add('hidden');
+
+                try {
+                    const response = await fetch('/api/analyze', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        throw new Error(errData.detail || `Server error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    renderResults(data);
+                } catch (err) {
+                    console.error(err);
+                    showError(err.message);
+                    emptyState.classList.remove('hidden');
+                } finally {
+                    analyzeBtn.disabled = false;
+                    loadingIndicator.classList.add('hidden');
+                }
+            });
+
+            function showError(msg) {
+                errorMsg.textContent = msg;
+                errorMsg.classList.remove('hidden');
+            }
+
+            function hideError() {
+                errorMsg.classList.add('hidden');
+            }
+
+            // --- Results Rendering ---
+            function getSeverityColors(severity) {
+                switch(severity) {
+                    case 'Critical': return { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-500', icon: '🚨' };
+                    case 'High': return { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-500', icon: '⚠️' };
+                    case 'Medium': return { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-500', icon: '🚧' };
+                    case 'Low': return { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-500', icon: 'ℹ️' };
+                    case 'None': return { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-500', icon: '✅' };
+                    default: return { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-500', icon: '❓' };
+                }
+            }
+
+            function renderResults(data) {
+                resultsContainer.classList.remove('hidden');
+
+                // File info
+                resFilename.textContent = data.filename;
+                resExt.textContent = data.extension || '(none)';
+                resMime.textContent = data.mime_type;
+
+                // Overall Status
+                const colors = getSeverityColors(data.overall_severity);
+                overallStatus.className = `p-4 rounded-md font-bold text-lg text-center flex items-center justify-center gap-2 border-l-4 ${colors.bg} ${colors.text} ${colors.border}`;
+
+                const statusText = data.is_safe ? 'File appears SAFE' : 'THREATS DETECTED';
+                overallStatus.innerHTML = `<span>${colors.icon}</span> <span>${statusText} (Max Severity: ${data.overall_severity})</span>`;
+
+                // Findings
+                findingsList.innerHTML = '';
+                if (data.findings && data.findings.length > 0) {
+                    data.findings.forEach(finding => {
+                        const fColors = getSeverityColors(finding.severity);
+                        const li = document.createElement('li');
+                        li.className = `p-3 rounded border-l-4 ${fColors.border} bg-white shadow-sm border border-gray-100 text-sm`;
+                        li.innerHTML = `
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-bold text-gray-800">${finding.vulnerability}</span>
+                                <span class="px-2 py-0.5 rounded text-xs font-bold ${fColors.bg} ${fColors.text}">${finding.severity}</span>
+                            </div>
+                            <p class="text-gray-600">${finding.description}</p>
+                        `;
+                        findingsList.appendChild(li);
+                    });
+                } else {
+                    const li = document.createElement('li');
+                    li.className = "text-center text-gray-500 italic py-4 bg-gray-50 rounded border border-gray-100";
+                    li.textContent = "No vulnerabilities detected based on current signatures.";
+                    findingsList.appendChild(li);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

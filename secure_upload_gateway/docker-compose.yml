@@ -1,0 +1,22 @@
+
+services:
+  secure-upload-gateway:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - LOG_LEVEL=INFO
+    env_file:
+      - .env.example
+    networks:
+      - gateway_network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    # Drop unnecessary capabilities for hardening
+    cap_drop:
+      - ALL
+
+networks:
+  gateway_network:
+    driver: bridge
