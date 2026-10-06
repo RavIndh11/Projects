@@ -96,6 +96,7 @@
             <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Create Honeytoken</h3>
+                    <div id="error-message" class="hidden mt-4 mb-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg" role="alert"></div>
                     <div class="mt-2">
                         <div>
                             <label for="token-name" class="block text-sm font-medium text-gray-700">Token Name <span class="text-red-500">*</span></label>
@@ -130,6 +131,7 @@
 
     <script>
         async function createToken() {
+            document.getElementById('error-message').classList.add('hidden');
             const name = document.getElementById('token-name').value;
             const desc = document.getElementById('token-desc').value;
             const severity = document.getElementById('token-severity').value;
@@ -143,7 +145,8 @@
             if(response.ok) {
                 window.location.reload();
             } else {
-                alert('Failed to create token. Check name format (alphanumeric only).');
+                document.getElementById('error-message').textContent = 'Failed to create token. Check name format (alphanumeric only).';
+                document.getElementById('error-message').classList.remove('hidden');
             }
         }
     </script>
