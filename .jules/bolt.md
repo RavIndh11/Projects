@@ -9,3 +9,6 @@
 ## 2024-05-24 - Fast regex filtering
 **Learning:** Short-circuiting expensive regex searches in hot loops with string membership checks significantly improves performance.
 **Action:** Prioritize evaluating computationally cheap checks before expensive operations in Python hot loops.
+## 2025-02-28 - Regex Pre-compilation and Short-Circuiting in Log Analysis
+**Learning:** In applications like log analyzers that process large volumes of entries (e.g., `analyze_endpoints`), executing uncompiled `re.match` within nested hot loops and performing cheap string comparisons *after* expensive regex searches severely degrades performance (processing 50k logs took ~3.3s).
+**Action:** By explicitly pre-compiling regex patterns outside the loop, moving computationally cheap checks (like list membership `log.method in doc_path.methods`) before expensive regex evaluations to enable short-circuiting, and adding dictionary caching for repeated identical log paths, the execution time was reduced by >90% (to ~0.2s for 50k logs). Always pre-compile regexes and order loop conditionals by computational cost.
