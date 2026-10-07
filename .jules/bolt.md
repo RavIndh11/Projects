@@ -9,3 +9,6 @@
 ## 2024-05-24 - Fast regex filtering
 **Learning:** Short-circuiting expensive regex searches in hot loops with string membership checks significantly improves performance.
 **Action:** Prioritize evaluating computationally cheap checks before expensive operations in Python hot loops.
+## 2026-10-07 - HTTPx Connection Pooling in FastAPI
+**Learning:** Creating a new `httpx.AsyncClient` using an `async with` context manager inside frequently called endpoint dependencies or utility functions destroys connection pooling. Each call requires a full TCP handshake and TLS negotiation, causing severe latency spikes under load.
+**Action:** Use a globally initialized `httpx.AsyncClient` (or manage it via FastAPI lifespan events) so the underlying connection pool and HTTP transport are reused across requests.
