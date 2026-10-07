@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Shell Hunter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .threat-Low { @apply text-green-600 bg-green-100 border-green-200; }
+        .threat-Medium { @apply text-yellow-600 bg-yellow-100 border-yellow-200; }
+        .threat-High { @apply text-orange-600 bg-orange-100 border-orange-200; }
+        .threat-Critical { @apply text-red-600 bg-red-100 border-red-200; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-800 font-sans">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-bold text-slate-800 mb-2 flex items-center justify-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Web Shell Hunter
+            </h1>
+            <p class="text-gray-500 text-lg">Real-time Web Shell & Obfuscated Payload Detection Engine</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            <!-- Input Section -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h2 class="text-xl font-semibold mb-4 text-slate-700 border-b pb-2">Analysis Target</h2>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Upload File</label>
+                    <input type="file" id="fileInput" class="block w-full text-sm text-slate-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-indigo-50 file:text-indigo-700
+                        hover:file:bg-indigo-100 cursor-pointer border rounded-lg p-1"/>
+                    <button onclick="scanFile()" id="scanFileBtn" class="mt-3 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                        Scan File
+                    </button>
+                </div>
+
+                <div class="relative flex py-5 items-center">
+                    <div class="flex-grow border-t border-gray-200"></div>
+                    <span class="flex-shrink-0 mx-4 text-gray-400 text-sm">OR</span>
+                    <div class="flex-grow border-t border-gray-200"></div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Raw Text / Code</label>
+                    <textarea id="textInput" rows="6" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-mono text-sm" placeholder="<?php eval(base64_decode($_POST['cmd'])); ?>"></textarea>
+                    <button onclick="scanText()" id="scanTextBtn" class="mt-3 w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                        Scan Text
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
+                <h2 class="text-xl font-semibold mb-4 text-slate-700 border-b pb-2">Scan Results</h2>
+
+                <div id="loading" class="hidden flex-grow flex flex-col items-center justify-center text-gray-400">
+                    <svg class="animate-spin h-10 w-10 text-indigo-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p>Analyzing payload...</p>
+                </div>
+
+                <div id="initialState" class="flex-grow flex flex-col items-center justify-center text-gray-400 text-center p-8">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                     <p>Submit a file or text payload to view analysis results.</p>
+                </div>
+
+                <div id="results" class="hidden flex-grow flex flex-col gap-4">
+                    <div class="flex justify-between items-center p-4 rounded-lg border bg-gray-50">
+                        <span class="font-medium text-gray-700">Threat Level</span>
+                        <span id="resThreat" class="px-4 py-1 rounded-full text-sm font-bold border"></span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 rounded-lg border bg-gray-50">
+                            <span class="block text-sm text-gray-500 mb-1">Risk Score</span>
+                            <span id="resScore" class="text-2xl font-bold text-slate-700"></span><span class="text-gray-400 text-sm">/100</span>
+                        </div>
+                        <div class="p-4 rounded-lg border bg-gray-50">
+                            <span class="block text-sm text-gray-500 mb-1">Shannon Entropy</span>
+                            <span id="resEntropy" class="text-2xl font-bold text-slate-700"></span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-lg border bg-gray-50 flex-grow">
+                        <span class="block text-sm font-medium text-gray-700 mb-2">Matched Signatures</span>
+                        <ul id="resSignatures" class="list-disc pl-5 text-sm text-red-600 font-mono space-y-1">
+                        </ul>
+                        <p id="noSignatures" class="text-sm text-gray-500 italic hidden">No known signatures detected.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function setLoading(isLoading) {
+            document.getElementById('initialState').classList.add('hidden');
+            if (isLoading) {
+                document.getElementById('loading').classList.remove('hidden');
+                document.getElementById('results').classList.add('hidden');
+                document.getElementById('scanFileBtn').disabled = true;
+                document.getElementById('scanTextBtn').disabled = true;
+            } else {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('results').classList.remove('hidden');
+                document.getElementById('scanFileBtn').disabled = false;
+                document.getElementById('scanTextBtn').disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            setLoading(false);
+
+            const threatBadge = document.getElementById('resThreat');
+            threatBadge.textContent = data.threat_level;
+            threatBadge.className = `px-4 py-1 rounded-full text-sm font-bold border threat-${data.threat_level}`;
+
+            document.getElementById('resScore').textContent = data.risk_score;
+            document.getElementById('resEntropy').textContent = data.entropy;
+
+            const sigList = document.getElementById('resSignatures');
+            const noSig = document.getElementById('noSignatures');
+            sigList.innerHTML = '';
+
+            if (data.matched_signatures && data.matched_signatures.length > 0) {
+                data.matched_signatures.forEach(sig => {
+                    const li = document.createElement('li');
+                    li.textContent = sig;
+                    sigList.appendChild(li);
+                });
+                sigList.classList.remove('hidden');
+                noSig.classList.add('hidden');
+            } else {
+                sigList.classList.add('hidden');
+                noSig.classList.remove('hidden');
+            }
+        }
+
+        async function scanText() {
+            const content = document.getElementById('textInput').value;
+            if (!content) return alert('Please enter some text to scan.');
+
+            setLoading(true);
+            try {
+                const response = await fetch('/api/scan/text', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: content, filename: "pasted_text.txt" })
+                });
+
+                if (!response.ok) throw new Error('API Error');
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                alert('Error scanning text.');
+                setLoading(false);
+            }
+        }
+
+        async function scanFile() {
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput.files.length) return alert('Please select a file to upload.');
+
+            setLoading(true);
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/api/scan/file', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('API Error');
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                alert('Error scanning file.');
+                setLoading(false);
+            }
+        }
+    </script>
+</body>
+</html>
