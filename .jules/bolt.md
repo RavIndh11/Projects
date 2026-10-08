@@ -9,3 +9,8 @@
 ## 2024-05-24 - Fast regex filtering
 **Learning:** Short-circuiting expensive regex searches in hot loops with string membership checks significantly improves performance.
 **Action:** Prioritize evaluating computationally cheap checks before expensive operations in Python hot loops.
+## 2025-02-28 - httpx.AsyncClient connection pooling
+
+**Learning:** Creating a new `httpx.AsyncClient` inside an async function per request causes repeated TCP handshakes and prevents connection pooling, leading to performance degradation in external API calls.
+
+**Action:** Initialize a global `httpx.AsyncClient` instance outside of async functions to reuse connections across multiple requests and avoid repeated handshake overhead.
