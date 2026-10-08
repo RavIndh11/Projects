@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Upload Gateway Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">🛡️ Secure Upload Gateway</h1>
+            <p class="text-gray-600 mt-2">Real-time analysis of file uploads for spoofing, Zip Slip, and polyglots.</p>
+        </header>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                <h2 class="text-xl font-semibold">Recent Analyses</h2>
+                <button onclick="location.reload()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm transition">Refresh</button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 text-sm uppercase tracking-wider">
+                            <th class="p-4 border-b">Filename</th>
+                            <th class="p-4 border-b">Size (Bytes)</th>
+                            <th class="p-4 border-b">Status</th>
+                            <th class="p-4 border-b">Severity</th>
+                            <th class="p-4 border-b">Findings</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for analysis in analyses %}
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="p-4 font-mono text-sm">{{ analysis.filename }}</td>
+                            <td class="p-4">{{ analysis.size }}</td>
+                            <td class="p-4">
+                                {% if analysis.status == 'safe' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Safe
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        Danger
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4">
+                                {% if analysis.severity == 'Critical' %}
+                                    <span class="text-red-600 font-bold">CRITICAL</span>
+                                {% elif analysis.severity == 'High' %}
+                                    <span class="text-orange-500 font-bold">HIGH</span>
+                                {% elif analysis.severity == 'Medium' %}
+                                    <span class="text-yellow-500 font-semibold">MEDIUM</span>
+                                {% else %}
+                                    <span class="text-gray-400">NONE</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4 text-sm text-gray-600">
+                                <ul class="list-disc list-inside">
+                                {% for finding in analysis.findings %}
+                                    <li>{{ finding }}</li>
+                                {% endfor %}
+                                </ul>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="p-8 text-center text-gray-500">
+                                No uploads analyzed yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
