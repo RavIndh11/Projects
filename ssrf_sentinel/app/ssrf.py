@@ -31,6 +31,12 @@ class URLValidator:
     def is_safe_ip(cls, ip_str: str) -> bool:
         try:
             ip = ipaddress.ip_address(ip_str)
+
+            # Prevent IPv4-mapped IPv6 address bypass
+            # Extract the underlying IPv4 address if it is mapped
+            if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
+                ip = ip.ipv4_mapped
+
             for network in cls.BLOCKED_NETWORKS:
                 if ip in network:
                     return False
