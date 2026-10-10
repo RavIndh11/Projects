@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  mfa-fatigue-hunter:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.example
+    networks:
+      - mfa-network
+    restart: unless-stopped
+
+networks:
+  mfa-network:
+    driver: bridge
