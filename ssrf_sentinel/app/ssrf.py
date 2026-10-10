@@ -9,6 +9,9 @@ logger = logging.getLogger(__name__)
 class SSRFError(Exception):
     pass
 
+# Global client to enable connection pooling and avoid repeated TCP handshakes
+_http_client = httpx.AsyncClient(verify=False)
+
 class URLValidator:
     BLOCKED_NETWORKS = [
         # IPv4
@@ -98,16 +101,15 @@ class URLValidator:
             # follow_redirects=False is important. If we follow redirects,
             # httpx will re-resolve DNS and potentially hit internal networks.
             # To be 100% safe against SSRF via redirects, we don't follow them automatically.
-            async with httpx.AsyncClient(timeout=timeout, verify=False) as client:
-                async with client.stream("GET", safe_url, headers=headers, follow_redirects=False) as response:
-                    # Check for redirects
-                    if 300 <= response.status_code < 400:
-                        raise SSRFError(f"Redirects are not allowed for security reasons. (Status: {response.status_code})")
+            async with _http_client.stream("GET", safe_url, headers=headers, follow_redirects=False, timeout=timeout) as response:
+                # Check for redirects
+                if 300 <= response.status_code < 400:
+                    raise SSRFError(f"Redirects are not allowed for security reasons. (Status: {response.status_code})")
 
-                    response.raise_for_status()
-                    # Read only the first 1000 bytes to prevent OOM
-                    content = await response.aread()
-                    return content[:1000].decode(errors='replace')
+                response.raise_for_status()
+                # Read only the first 1000 bytes to prevent OOM
+                content = await response.aread()
+                return content[:1000].decode(errors='replace')
         except httpx.RequestError as e:
             logger.error(f"HTTP request failed: {e}")
             raise SSRFError(f"Failed to fetch URL: {str(e)}")
