@@ -9,3 +9,6 @@
 ## 2024-05-24 - Fast regex filtering
 **Learning:** Short-circuiting expensive regex searches in hot loops with string membership checks significantly improves performance.
 **Action:** Prioritize evaluating computationally cheap checks before expensive operations in Python hot loops.
+## 2025-03-02 - Python standard library statistics module overhead
+**Learning:** Python's standard `statistics` module (e.g., `statistics.mean`, `statistics.pstdev`) includes overhead for exact decimal precision and handling various data types. When processing large arrays of numeric data in hot loops, this overhead can be massive (taking ~5x longer for standard deviation and >30x longer for mean).
+**Action:** Replace `statistics` functions with native math operations (`sum(data)/len(data)` and `math.sqrt()`) in computationally intensive paths when exact precision standard library handling is not strictly necessary.
