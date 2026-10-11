@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Upload Gateway</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .badge-Safe { @apply bg-green-100 text-green-800; }
+        .badge-Low { @apply bg-yellow-100 text-yellow-800; }
+        .badge-Medium { @apply bg-orange-100 text-orange-800; }
+        .badge-High { @apply bg-red-100 text-red-800; }
+        .badge-Critical { @apply bg-red-900 text-red-100 font-bold; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col font-sans">
+
+    <header class="bg-indigo-600 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                Secure Upload Gateway
+            </h1>
+            <div class="text-sm">Real-time File Analysis</div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 flex-grow flex flex-col md:flex-row gap-6 mt-6">
+
+        <!-- Upload Section -->
+        <section class="w-full md:w-1/3 bg-white p-6 rounded-lg shadow-sm border border-gray-200 h-fit">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Upload File</h2>
+            <p class="text-sm text-gray-600 mb-4">Select a file to scan for polyglots, Zip Slip, and extension spoofing.</p>
+
+            <form id="uploadForm" class="space-y-4">
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition" onclick="document.getElementById('fileInput').click()">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <div class="mt-4 flex text-sm text-gray-600 justify-center">
+                        <label for="fileInput" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                            <span>Upload a file</span>
+                            <input id="fileInput" name="file" type="file" class="sr-only">
+                        </label>
+                        <p class="pl-1">or drag and drop</p>
+                    </div>
+                    <p class="text-xs text-gray-500" id="fileNameDisplay">No file selected</p>
+                </div>
+
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Scan File
+                </button>
+            </form>
+
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="hidden mt-4 text-center">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-600 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-sm text-gray-600">Analyzing...</span>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="w-full md:w-2/3 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Analysis Results</h2>
+
+            <div id="resultsContainer" class="hidden space-y-6">
+                <!-- Summary Card -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900" id="resFilename">filename.ext</h3>
+                        <p class="text-sm text-gray-500">MIME Type: <span id="resMime" class="font-mono">application/octet-stream</span></p>
+                    </div>
+                    <div>
+                        <span id="resSeverity" class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full badge-Safe">
+                            Safe
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Threat Findings -->
+                <div>
+                    <h4 class="text-md font-medium text-gray-700 mb-2">Threat Findings</h4>
+                    <div class="overflow-hidden border border-gray-200 sm:rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Threat Type</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="findingsBody" class="bg-white divide-y divide-gray-200">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                        <div id="noFindingsMsg" class="px-6 py-4 text-sm text-gray-500 italic text-center hidden">
+                            No threats detected.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Raw JSON -->
+                <div>
+                    <h4 class="text-md font-medium text-gray-700 mb-2">Raw JSON Response</h4>
+                    <pre id="resJson" class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs overflow-x-auto font-mono"></pre>
+                </div>
+            </div>
+
+            <div id="emptyState" class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No Analysis Yet</h3>
+                <p class="mt-1 text-sm text-gray-500">Upload a file to see the security scan results.</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMsg" class="hidden mt-4 bg-red-50 border-l-4 border-red-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700" id="errorText">Error uploading file.</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 mt-auto py-4">
+        <div class="container mx-auto px-4 text-center text-sm text-gray-500">
+            Secure Upload Gateway - SOC Automation
+        </div>
+    </footer>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileNameDisplay = document.querySelector('.text-xs.text-gray-500');
+        const uploadForm = document.getElementById('uploadForm');
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                fileNameDisplay.textContent = e.target.files[0].name;
+                fileNameDisplay.classList.add('text-indigo-600', 'font-medium');
+            } else {
+                fileNameDisplay.textContent = 'No file selected';
+                fileNameDisplay.classList.remove('text-indigo-600', 'font-medium');
+            }
+        });
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (fileInput.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            // UI updates
+            document.getElementById('loadingIndicator').classList.remove('hidden');
+            document.getElementById('resultsContainer').classList.add('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('errorMsg').classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Update Results UI
+                document.getElementById('resFilename').textContent = data.filename;
+                document.getElementById('resMime').textContent = data.actual_mime;
+
+                const sevBadge = document.getElementById('resSeverity');
+                sevBadge.textContent = data.severity;
+                sevBadge.className = `px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full badge-${data.severity}`;
+
+                const tbody = document.getElementById('findingsBody');
+                const noFindingsMsg = document.getElementById('noFindingsMsg');
+                tbody.innerHTML = '';
+
+                if (data.findings && data.findings.length > 0) {
+                    data.findings.forEach(f => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${f.threat_type}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">${f.description}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                    noFindingsMsg.classList.add('hidden');
+                } else {
+                    noFindingsMsg.classList.remove('hidden');
+                }
+
+                document.getElementById('resJson').textContent = JSON.stringify(data, null, 2);
+
+                document.getElementById('resultsContainer').classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Upload error:", error);
+                document.getElementById('errorText').textContent = `Analysis failed: ${error.message}`;
+                document.getElementById('errorMsg').classList.remove('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
+            } finally {
+                document.getElementById('loadingIndicator').classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
