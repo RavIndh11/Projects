@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  secure_upload_gateway:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.example
+    networks:
+      - security_net
+
+networks:
+  security_net:
+    driver: bridge
