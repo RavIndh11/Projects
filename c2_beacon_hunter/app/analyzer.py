@@ -1,6 +1,6 @@
 from typing import List, Dict, Tuple
 from collections import defaultdict
-import statistics
+import math
 from .models import NetworkLog, BeaconAlert
 
 class BeaconAnalyzer:
@@ -40,10 +40,13 @@ class BeaconAnalyzer:
                 continue
 
             # Calculate stats
-            mean_interval = statistics.mean(intervals)
+            # ⚡ Bolt: Use native math and sum instead of statistics module.
+            # The statistics module is precise but computationally expensive on hot paths.
+            n = len(intervals)
+            mean_interval = sum(intervals) / n
 
             # ⚡ Bolt: Early skip if mean_interval is below threshold.
-            # Calculating standard deviation (statistics.pstdev) is computationally expensive.
+            # Calculating standard deviation is computationally expensive.
             # Skipping it for traffic that doesn't meet the interval threshold
             # significantly improves analysis speed on large datasets.
             if mean_interval < self.min_interval_seconds:
@@ -53,7 +56,8 @@ class BeaconAnalyzer:
             if mean_interval == 0:
                 jitter_percent = 0.0
             else:
-                std_dev = statistics.pstdev(intervals)
+                variance = sum((x - mean_interval) ** 2 for x in intervals) / n
+                std_dev = math.sqrt(variance)
                 jitter_percent = (std_dev / mean_interval) * 100
 
             # Check if it matches beaconing profile (low jitter, sufficient frequency)
